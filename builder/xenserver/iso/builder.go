@@ -293,6 +293,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
+		new(xscommon.StepDestroyVIFs),
 		new(xscommon.StepExport),
 	}
 

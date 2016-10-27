@@ -167,6 +167,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 		},
+		new(xscommon.StepDestroyVIFs),
 		new(xscommon.StepExport),
 	}
 
