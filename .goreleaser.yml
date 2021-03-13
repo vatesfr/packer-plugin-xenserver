@@ -24,7 +24,7 @@ builds:
     flags:
       - -trimpath #removes all file system paths from the compiled executable
     ldflags:
-      - '-s -w -X main.Version={{.Version}} -X main.VersionPrerelease= '
+      - '-s -w -X main.Version=v{{.Version}} -X main.VersionPrerelease= '
     goos:
       - linux
     goarch:

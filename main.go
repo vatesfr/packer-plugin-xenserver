@@ -13,17 +13,21 @@ import (
 
 var (
 	// Version is the main version number that is being run at the moment.
-	Version = "0.3.1"
+	Version string
 
 	// VersionPrerelease is A pre-release marker for the Version. If this is ""
 	// (empty string) then it means that it is a final release. Otherwise, this
 	// is a pre-release such as "dev" (in development), "beta", "rc1", etc.
-	VersionPrerelease = ""
+	VersionPrerelease string
 
 	// PluginVersion is used by the plugin set to allow Packer to recognize
 	// what version this plugin is.
-	PluginVersion = version.InitializePluginVersion(Version, VersionPrerelease)
+	PluginVersion *version.PluginVersion
 )
+
+func init() {
+	PluginVersion = version.InitializePluginVersion(Version, VersionPrerelease)
+}
 
 func main() {
 	pps := plugin.NewSet()
