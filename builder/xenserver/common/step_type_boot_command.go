@@ -105,18 +105,45 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		return multistep.ActionHalt
 	}
 
-	buffer := make([]byte, 10000)
-	_, err = tlsConn.Read(buffer)
-	if err != nil && err != io.EOF {
-		err := fmt.Errorf("failed to read vnc session response: %v", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
+        // Look for \r\n\r\n sequence. Everything after the HTTP Header is for the vnc client.
+        
+	builder := strings.Builder{}
+	buffer := make([]byte, 1)
+	sequenceProgress := 0
+
+	for {
+		if _, err := io.ReadFull(tlsConn, buffer); err != nil {
+			err := fmt.Errorf("failed to start vnc session: %v", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+
+		builder.WriteByte(buffer[0])
+
+		if buffer[0] == '\n' && sequenceProgress % 2 == 1 {
+			sequenceProgress++
+		} else if buffer[0] == '\r' && sequenceProgress % 2 == 0 {
+			sequenceProgress++
+		} else {
+			sequenceProgress = 0
+		}
+
+		if sequenceProgress == 4 {
+			break
+		}
 	}
+        
+	ui.Say(fmt.Sprintf("Received response: %s", builder.String()))
 
-	ui.Say(fmt.Sprintf("Received response: %s", string(buffer)))
-
+	// Make sure the VNC Handshake times out when it can't read anything.
+	duration,_ := time.ParseDuration("30s")
+	tlsConn.SetDeadline(time.Now().Add(duration)) 
 	vncClient, err := vnc.Client(tlsConn, &vnc.ClientConfig{Exclusive: true})
+	
+	// Make sure further requests don't time out.
+	duration,_ = time.ParseDuration("1d")
+	tlsConn.SetDeadline(time.Now().Add(duration)) 
 
 	if err != nil {
 		err := fmt.Errorf("Error establishing VNC session: %s", err)
