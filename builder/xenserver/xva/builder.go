@@ -117,7 +117,6 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 		},
-		new(xscommon.StepHTTPServer),
 		&xscommon.StepUploadVdi{
 			VdiNameFunc: func() string {
 				return "Packer-floppy-disk"
@@ -145,6 +144,8 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
+		new(xscommon.StepHTTPIPDiscover),
+		commonsteps.HTTPServerFromHTTPConfig(&self.config.HTTPConfig),
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
 			Ctx: *self.config.GetInterpContext(),

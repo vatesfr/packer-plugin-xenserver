@@ -34,6 +34,7 @@ type FlatConfig struct {
 	RawBootWait               *string           `mapstructure:"boot_wait" cty:"boot_wait" hcl:"boot_wait"`
 	ToolsIsoName              *string           `mapstructure:"tools_iso_name" cty:"tools_iso_name" hcl:"tools_iso_name"`
 	HTTPDir                   *string           `mapstructure:"http_directory" cty:"http_directory" hcl:"http_directory"`
+	HTTPContent               map[string]string `mapstructure:"http_content" cty:"http_content" hcl:"http_content"`
 	HTTPPortMin               *uint             `mapstructure:"http_port_min" cty:"http_port_min" hcl:"http_port_min"`
 	HTTPPortMax               *uint             `mapstructure:"http_port_max" cty:"http_port_max" hcl:"http_port_max"`
 	SSHKeyPath                *string           `mapstructure:"ssh_key_path" cty:"ssh_key_path" hcl:"ssh_key_path"`
@@ -146,6 +147,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"boot_wait":                    &hcldec.AttrSpec{Name: "boot_wait", Type: cty.String, Required: false},
 		"tools_iso_name":               &hcldec.AttrSpec{Name: "tools_iso_name", Type: cty.String, Required: false},
 		"http_directory":               &hcldec.AttrSpec{Name: "http_directory", Type: cty.String, Required: false},
+		"http_content":                 &hcldec.AttrSpec{Name: "http_content", Type: cty.Map(cty.String), Required: false},
 		"http_port_min":                &hcldec.AttrSpec{Name: "http_port_min", Type: cty.Number, Required: false},
 		"http_port_max":                &hcldec.AttrSpec{Name: "http_port_max", Type: cty.Number, Required: false},
 		"ssh_key_path":                 &hcldec.AttrSpec{Name: "ssh_key_path", Type: cty.String, Required: false},

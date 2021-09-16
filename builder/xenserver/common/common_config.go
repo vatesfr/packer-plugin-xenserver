@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
@@ -15,6 +16,7 @@ import (
 
 type CommonConfig struct {
 	bootcommand.VNCConfig          `mapstructure:",squash"`
+	commonsteps.HTTPConfig         `mapstructure:",squash"`
 
 	Username string `mapstructure:"remote_username"`
 	Password string `mapstructure:"remote_password"`
@@ -37,10 +39,6 @@ type CommonConfig struct {
 	BootWait    time.Duration
 
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
-
-	HTTPDir     string `mapstructure:"http_directory"`
-	HTTPPortMin uint   `mapstructure:"http_port_min"`
-	HTTPPortMax uint   `mapstructure:"http_port_max"`
 
 	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
 	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`

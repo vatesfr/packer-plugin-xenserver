@@ -196,9 +196,6 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 		},
-		&xscommon.StepHTTPServer{
-			Chan: httpReqChan,
-		},
 		&xscommon.StepUploadVdi{
 			VdiNameFunc: func() string {
 				return "Packer-floppy-disk"
@@ -253,6 +250,8 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
+		new(xscommon.StepHTTPIPDiscover),
+		commonsteps.HTTPServerFromHTTPConfig(&self.config.HTTPConfig),
 		// &xscommon.StepForwardPortOverSSH{
 		// 	RemotePort:  xscommon.InstanceVNCPort,
 		// 	RemoteDest:  xscommon.InstanceVNCIP,

@@ -148,22 +148,10 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 
 	log.Printf("Connected to the VNC console: %s", vncClient.DesktopName)
 
-	// find local ip
-	envVar, err := ExecuteHostSSHCmd(state, "echo $SSH_CLIENT")
-	if err != nil {
-		ui.Error(fmt.Sprintf("Error detecting local IP: %s", err))
-		return multistep.ActionHalt
-	}
-	if envVar == "" {
-		ui.Error("Error detecting local IP: $SSH_CLIENT was empty")
-		return multistep.ActionHalt
-	}
-	localIp := strings.Split(envVar, " ")[0]
-	ui.Message(fmt.Sprintf("Found local IP: %s", localIp))
-
+	hostIP := state.Get("http_ip").(string)
 	self.Ctx.Data = &bootCommandTemplateData{
 		config.VMName,
-		localIp,
+		hostIP,
 		uint(httpPort),
 	}
 
