@@ -56,7 +56,7 @@ $ go build -o packer-plugin-xenserver
 
 # Add the builder to the location packer expects it to be installed in
 $ mkdir -p ~/.packer.d/plugins/
-$ cp builder-xenserver-iso  ~/.packer.d/plugins/packer-builder-xenserver-iso
+$ cp packer-plugin-xenserver  ~/.packer.d/plugins/packer-plugin-xenserver
 ```
 
 # Documentation
