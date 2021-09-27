@@ -98,6 +98,7 @@ type FlatConfig struct {
 	VCPUsAtStartup            *uint             `mapstructure:"vcpus_atstartup" cty:"vcpus_atstartup" hcl:"vcpus_atstartup"`
 	VMMemory                  *uint             `mapstructure:"vm_memory" cty:"vm_memory" hcl:"vm_memory"`
 	DiskSize                  *uint             `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
+	AdditionalDisks           []uint            `mapstructure:"additional_disks" cty:"additional_disks" hcl:"additional_disks"`
 	CloneTemplate             *string           `mapstructure:"clone_template" cty:"clone_template" hcl:"clone_template"`
 	VMOtherConfig             map[string]string `mapstructure:"vm_other_config" cty:"vm_other_config" hcl:"vm_other_config"`
 	ISOChecksum               *string           `mapstructure:"iso_checksum" cty:"iso_checksum" hcl:"iso_checksum"`
@@ -211,6 +212,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vcpus_atstartup":              &hcldec.AttrSpec{Name: "vcpus_atstartup", Type: cty.Number, Required: false},
 		"vm_memory":                    &hcldec.AttrSpec{Name: "vm_memory", Type: cty.Number, Required: false},
 		"disk_size":                    &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
+		"additional_disks":             &hcldec.AttrSpec{Name: "additional_disks", Type: cty.List(cty.Number), Required: false},
 		"clone_template":               &hcldec.AttrSpec{Name: "clone_template", Type: cty.String, Required: false},
 		"vm_other_config":              &hcldec.AttrSpec{Name: "vm_other_config", Type: cty.Map(cty.String), Required: false},
 		"iso_checksum":                 &hcldec.AttrSpec{Name: "iso_checksum", Type: cty.String, Required: false},
