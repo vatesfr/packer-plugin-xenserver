@@ -155,9 +155,9 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Timeout: 300 * time.Minute, /*self.config.InstallTimeout*/ // @todo change this
 		},
 		&communicator.StepConnect{
-			Config:    &self.config.SSHConfig.Comm,
+			Config:    &self.config.Comm,
 			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
+			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.Comm),
 			SSHPort:   xscommon.SSHPort,
 		},
 		new(commonsteps.StepProvision),

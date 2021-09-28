@@ -12,8 +12,8 @@ type StepForwardPortOverSSH struct {
 	RemotePort func(state multistep.StateBag) (int, error)
 	RemoteDest func(state multistep.StateBag) (string, error)
 
-	HostPortMin uint
-	HostPortMax uint
+	HostPortMin int
+	HostPortMax int
 
 	ResultKey string
 }

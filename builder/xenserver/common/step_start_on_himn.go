@@ -10,6 +10,7 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
+// TODO Seems to be unused
 type StepStartOnHIMN struct{}
 
 /*
@@ -131,7 +132,7 @@ func HimnSSHIP(state multistep.StateBag) (string, error) {
 	return ip, nil
 }
 
-func HimnSSHPort(state multistep.StateBag) (uint, error) {
+func HimnSSHPort(state multistep.StateBag) (int, error) {
 	config := state.Get("commonconfig").(CommonConfig)
-	return config.SSHPort, nil
+	return config.Comm.SSHPort, nil
 }

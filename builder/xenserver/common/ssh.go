@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/pem"
 	"fmt"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"io"
 	"io/ioutil"
 	"log"
@@ -39,15 +40,14 @@ func CommHost(state multistep.StateBag) (string, error) {
 	return "127.0.0.1", nil
 }
 
-func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConfig, error) {
+func SSHConfigFunc(commConfig communicator.Config) func(multistep.StateBag) (*gossh.ClientConfig, error) {
 	return func(state multistep.StateBag) (*gossh.ClientConfig, error) {
-		config := state.Get("commonconfig").(CommonConfig)
 		auth := []gossh.AuthMethod{
-			gossh.Password(config.SSHPassword),
+			gossh.Password(commConfig.SSHPassword),
 		}
 
-		if config.SSHKeyPath != "" {
-			signer, err := FileSigner(config.SSHKeyPath)
+		if commConfig.SSHPrivateKeyFile != "" {
+			signer, err := FileSigner(commConfig.SSHPrivateKeyFile)
 			if err != nil {
 				return nil, err
 			}
@@ -56,7 +56,7 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		}
 
 		return &gossh.ClientConfig{
-			User:            config.SSHUser,
+			User:            commConfig.SSHUsername,
 			Auth:            auth,
 			HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 		}, nil
@@ -106,7 +106,7 @@ func ExecuteGuestSSHCmd(state multistep.StateBag, cmd string) (stdout string, er
 	if err != nil {
 		return
 	}
-	sshConfig, err := SSHConfigFunc(config.SSHConfig)(state)
+	sshConfig, err := SSHConfigFunc(config.Comm)(state)
 	if err != nil {
 		return
 	}

@@ -3,7 +3,6 @@ package common
 import (
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
@@ -30,9 +29,6 @@ type CommonConfig struct {
 	NetworkNames       []string `mapstructure:"network_names"`
 	ExportNetworkNames []string `mapstructure:"export_network_names"`
 
-	HostPortMin uint `mapstructure:"host_port_min"`
-	HostPortMax uint `mapstructure:"host_port_max"`
-
 	ShutdownCommand string `mapstructure:"shutdown_command"`
 
 	RawBootWait string `mapstructure:"boot_wait"`
@@ -40,15 +36,7 @@ type CommonConfig struct {
 
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
 
-	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
-	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
-	SSHPassword string `mapstructure:"ssh_password"`
-	SSHPort     uint   `mapstructure:"ssh_port"`
-	SSHUser     string `mapstructure:"ssh_username"`
-	SSHConfig   `mapstructure:",squash"`
-
-	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
-	SSHWaitTimeout    time.Duration
+	CommConfig `mapstructure:",squash"`
 
 	OutputDir string `mapstructure:"output_directory"`
 	Format    string `mapstructure:"format"`
@@ -86,30 +74,8 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		c.HTTPPortMax = 9000
 	}
 
-	if c.RawSSHWaitTimeout == "" {
-		c.RawSSHWaitTimeout = "200m"
-	}
-
 	if c.FloppyFiles == nil {
 		c.FloppyFiles = make([]string, 0)
-	}
-
-	/*
-		if c.SSHHostPortMin == 0 {
-			c.SSHHostPortMin = 2222
-		}
-
-		if c.SSHHostPortMax == 0 {
-			c.SSHHostPortMax = 4444
-		}
-	*/
-
-	if c.SSHPort == 0 {
-		c.SSHPort = 22
-	}
-
-	if c.RawSSHWaitTimeout == "" {
-		c.RawSSHWaitTimeout = "20m"
 	}
 
 	if c.OutputDir == "" {
@@ -157,30 +123,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	c.BootWait, err = time.ParseDuration(c.RawBootWait)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("Failed to parse boot_wait: %s", err))
-	}
-
-	if c.SSHKeyPath != "" {
-		if _, err := os.Stat(c.SSHKeyPath); err != nil {
-			errs = append(errs, fmt.Errorf("ssh_key_path is invalid: %s", err))
-		} else if _, err := FileSigner(c.SSHKeyPath); err != nil {
-			errs = append(errs, fmt.Errorf("ssh_key_path is invalid: %s", err))
-		}
-	}
-
-	/*
-		if c.SSHHostPortMin > c.SSHHostPortMax {
-			errs = append(errs,
-				errors.New("ssh_host_port_min must be less than ssh_host_port_max"))
-		}
-	*/
-
-	if c.SSHUser == "" {
-		errs = append(errs, errors.New("An ssh_username must be specified."))
-	}
-
-	c.SSHWaitTimeout, err = time.ParseDuration(c.RawSSHWaitTimeout)
-	if err != nil {
-		errs = append(errs, fmt.Errorf("Failed to parse ssh_wait_timeout: %s", err))
 	}
 
 	switch c.Format {

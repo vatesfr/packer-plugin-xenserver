@@ -5,14 +5,12 @@ import (
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/common"
-	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 )
 
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	CommonConfig        `mapstructure:",squash"`
-	Comm                communicator.Config `mapstructure:",squash"`
 
 	VCPUsMax        uint              `mapstructure:"vcpus_max"`
 	VCPUsAtStartup  uint              `mapstructure:"vcpus_atstartup"`

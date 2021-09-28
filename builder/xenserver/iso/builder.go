@@ -45,7 +45,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 	errs = packer.MultiErrorAppend(
 		errs, self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
-	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(self.config.GetInterpContext())...)
+	errs = packer.MultiErrorAppend(errs, self.config.Comm.Prepare(self.config.GetInterpContext())...)
 
 	// Set default values
 
@@ -76,7 +76,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	if self.config.CloneTemplate == "" {
 		self.config.CloneTemplate = "Other install media"
 	}
-	
+
 	if self.config.Firmware == "" {
 		self.config.Firmware = "bios"
 	}
@@ -275,7 +275,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			ResultKey:   "local_ssh_port",
 		},
 		&communicator.StepConnect{
-			Config:    &self.config.SSHConfig.Comm,
+			Config:    &self.config.Comm,
 			Host:      xscommon.InstanceSSHIP,
 			SSHConfig: self.config.Comm.SSHConfigFunc(),
 			SSHPort:   xscommon.InstanceSSHPort,
