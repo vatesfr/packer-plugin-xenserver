@@ -2,8 +2,6 @@ package common
 
 import (
 	"errors"
-	"time"
-
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 )
@@ -17,11 +15,10 @@ type SSHConfig struct {
 
 	// These are deprecated, but we keep them around for BC
 	// TODO(@mitchellh): remove
-	SSHKeyPath     string        `mapstructure:"ssh_key_path"`
-	SSHWaitTimeout time.Duration `mapstructure:"ssh_wait_timeout"`
+	SSHKeyPath string `mapstructure:"ssh_key_path"`
 }
 
-func (c *SSHConfig) Prepare(ctx *interpolate.Context) []error {
+func (c *SSHConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs []error) {
 	if c.SSHHostPortMin == 0 {
 		c.SSHHostPortMin = 2222
 	}
@@ -34,15 +31,12 @@ func (c *SSHConfig) Prepare(ctx *interpolate.Context) []error {
 	if c.SSHKeyPath != "" {
 		c.Comm.SSHPrivateKeyFile = c.SSHKeyPath
 	}
-	if c.SSHWaitTimeout != 0 {
-		c.Comm.SSHTimeout = c.SSHWaitTimeout
-	}
 
-	errs := c.Comm.Prepare(ctx)
+	errs = c.Comm.Prepare(ctx)
 	if c.SSHHostPortMin > c.SSHHostPortMax {
 		errs = append(errs,
 			errors.New("ssh_host_port_min must be less than ssh_host_port_max"))
 	}
 
-	return errs
+	return
 }
