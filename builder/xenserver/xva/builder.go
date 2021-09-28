@@ -156,9 +156,9 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		&communicator.StepConnect{
 			Config:    &self.config.Comm,
-			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.Comm),
-			SSHPort:   xscommon.SSHPort,
+			Host:      xscommon.InstanceSSHIP,
+			SSHConfig: self.config.Comm.SSHConfigFunc(),
+			SSHPort:   xscommon.InstanceSSHPort,
 		},
 		new(commonsteps.StepProvision),
 		new(xscommon.StepShutdown),

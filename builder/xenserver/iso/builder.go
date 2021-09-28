@@ -267,13 +267,6 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Chan:    httpReqChan,
 			Timeout: self.config.InstallTimeout, // @todo change this
 		},
-		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.InstanceSSHPort,
-			RemoteDest:  xscommon.InstanceSSHIP,
-			HostPortMin: self.config.HostPortMin,
-			HostPortMax: self.config.HostPortMax,
-			ResultKey:   "local_ssh_port",
-		},
 		&communicator.StepConnect{
 			Config:    &self.config.Comm,
 			Host:      xscommon.InstanceSSHIP,

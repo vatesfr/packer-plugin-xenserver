@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -29,11 +30,13 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 	// Shutdown the VM
 	success := func() bool {
 		if config.ShutdownCommand != "" {
-			ui.Message("Executing shutdown command...")
+			comm := state.Get("communicator").(packer.Communicator)
+			ui.Say("Gracefully halting virtual machine...")
+			log.Printf("Executing shutdown command: %s", config.ShutdownCommand)
 
-			_, err := ExecuteGuestSSHCmd(state, config.ShutdownCommand)
-			if err != nil {
-				ui.Error(fmt.Sprintf("Shutdown command failed: %s", err.Error()))
+			cmd := &packer.RemoteCmd{Command: config.ShutdownCommand}
+			if err := cmd.RunWithUi(ctx, comm, ui); err != nil {
+				ui.Error(fmt.Sprintf("Failed to send shutdown command: %s", err.Error()))
 				return false
 			}
 
