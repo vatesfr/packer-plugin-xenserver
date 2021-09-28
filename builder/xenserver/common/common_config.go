@@ -6,17 +6,17 @@ import (
 	"os"
 	"time"
 
-	"github.com/hashicorp/packer-plugin-sdk/common"
-	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
-	"github.com/hashicorp/packer-plugin-sdk/multistep"
-	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
+	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
+	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
 type CommonConfig struct {
-	bootcommand.VNCConfig          `mapstructure:",squash"`
-	commonsteps.HTTPConfig         `mapstructure:",squash"`
+	bootcommand.VNCConfig  `mapstructure:",squash"`
+	commonsteps.HTTPConfig `mapstructure:",squash"`
 
 	Username string `mapstructure:"remote_username"`
 	Password string `mapstructure:"remote_password"`
@@ -33,7 +33,7 @@ type CommonConfig struct {
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
 
-	ShutdownCommand string   `mapstructure:"shutdown_command"`
+	ShutdownCommand string `mapstructure:"shutdown_command"`
 
 	RawBootWait string `mapstructure:"boot_wait"`
 	BootWait    time.Duration
@@ -42,7 +42,6 @@ type CommonConfig struct {
 
 	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
 	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
-	SSHKeyPath  string `mapstructure:"ssh_key_path"`
 	SSHPassword string `mapstructure:"ssh_password"`
 	SSHPort     uint   `mapstructure:"ssh_port"`
 	SSHUser     string `mapstructure:"ssh_username"`
