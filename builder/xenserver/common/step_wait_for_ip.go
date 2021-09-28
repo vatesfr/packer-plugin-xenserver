@@ -20,6 +20,12 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 	c := state.Get("client").(*Connection)
 	config := state.Get("commonconfig").(CommonConfig)
 
+	// Respect static configuration
+	if config.Comm.Host() != "" {
+		state.Put("instance_ssh_address", config.Comm.Host())
+		return multistep.ActionContinue
+	}
+
 	ui.Say("Step: Wait for VM's IP to become known to us.")
 
 	uuid := state.Get("instance_uuid").(string)
