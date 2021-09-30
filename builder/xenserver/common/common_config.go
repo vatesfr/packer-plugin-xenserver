@@ -61,14 +61,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		c.HostSSHPort = 22
 	}
 
-	if c.HostPortMin == 0 {
-		c.HostPortMin = 5900
-	}
-
-	if c.HostPortMax == 0 {
-		c.HostPortMax = 6000
-	}
-
 	if c.RawBootWait == "" {
 		c.RawBootWait = "5s"
 	}
@@ -121,10 +113,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	if c.HostIp == "" {
 		errs = append(errs, errors.New("remote_host must be specified."))
-	}
-
-	if c.HostPortMin > c.HostPortMax {
-		errs = append(errs, errors.New("the host min port must be less than the max"))
 	}
 
 	if c.HTTPPortMin > c.HTTPPortMax {

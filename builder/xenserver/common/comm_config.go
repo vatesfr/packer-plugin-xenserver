@@ -1,7 +1,7 @@
 package common
 
 import (
-	"errors"
+	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 )
@@ -11,14 +11,6 @@ import (
 type CommConfig struct {
 	Comm communicator.Config `mapstructure:",squash"`
 
-	// The minimum port to use for the Communicator port on the host machine which is forwarded
-	// to the SSH or WinRM port on the guest machine. By default this is 2222.
-	HostPortMin int `mapstructure:"host_port_min" required:"false"`
-	// The maximum port to use for the Communicator port on the host machine which is forwarded
-	// to the SSH or WinRM port on the guest machine. Because Packer often runs in parallel,
-	// Packer will choose a randomly available port in this range to use as the
-	// host port. By default this is 4444.
-	HostPortMax int `mapstructure:"host_port_max" required:"false"`
 	// Defaults to false. When enabled, Packer
 	// does not setup forwarded port mapping for communicator (SSH or WinRM) requests and uses ssh_port or winrm_port
 	// on the host to communicate to the virtual machine.
@@ -26,29 +18,26 @@ type CommConfig struct {
 
 	// These are deprecated, but we keep them around for backwards compatibility
 	// TODO: remove later
-	sshHostPortMin int `mapstructure:"ssh_host_port_min" required:"false"`
-	// TODO: remove later
-	sshHostPortMax int `mapstructure:"ssh_host_port_max"`
-	// TODO: remove later
-	sshKeyPath string `mapstructure:"ssh_key_path"`
-	// TODO: remove later
-	sshSkipNatMapping bool `mapstructure:"ssh_skip_nat_mapping"`
+	sshKeyPath        string `mapstructure:"ssh_key_path"`
+	sshSkipNatMapping bool   `mapstructure:"ssh_skip_nat_mapping"`
+	hostPortMin       int    `mapstructure:"host_port_min" required:"false"`
+	hostPortMax       int    `mapstructure:"host_port_max" required:"false"`
 }
 
 func (c *CommConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs []error) {
 
+	const removedHostPortFmt = "%s is deprecated because free ports are selected automatically. " +
+		"Please remove %s from your template. " +
+		"In future versions of Packer, inclusion of %s will error your builds."
+
 	// Backwards compatibility
-	if c.sshHostPortMin != 0 {
-		warnings = append(warnings, "ssh_host_port_min is deprecated and is being replaced by host_port_min. "+
-			"Please, update your template to use host_port_min. In future versions of Packer, inclusion of ssh_host_port_min will error your builds.")
-		c.HostPortMin = c.sshHostPortMin
+	if c.hostPortMin != 0 {
+		warnings = append(warnings, fmt.Sprintf(removedHostPortFmt, "host_port_min", "host_port_min", "host_port_min"))
 	}
 
 	// Backwards compatibility
-	if c.sshHostPortMax != 0 {
-		warnings = append(warnings, "ssh_host_port_max is deprecated and is being replaced by host_port_max. "+
-			"Please, update your template to use host_port_max. In future versions of Packer, inclusion of ssh_host_port_max will error your builds.")
-		c.HostPortMax = c.sshHostPortMax
+	if c.hostPortMax != 0 {
+		warnings = append(warnings, fmt.Sprintf(removedHostPortFmt, "host_port_max", "host_port_max", "host_port_max"))
 	}
 
 	// Backwards compatibility
@@ -71,23 +60,7 @@ func (c *CommConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs 
 		c.Comm.WinRMHost = "127.0.0.1"
 	}
 
-	if c.HostPortMin == 0 {
-		c.HostPortMin = 2222
-	}
-
-	if c.HostPortMax == 0 {
-		c.HostPortMax = 4444
-	}
-
 	errs = c.Comm.Prepare(ctx)
-	if c.HostPortMin > c.HostPortMax {
-		errs = append(errs,
-			errors.New("host_port_min must be less than host_port_max"))
-	}
-
-	if c.HostPortMin < 0 {
-		errs = append(errs, errors.New("host_port_min must be positive"))
-	}
 
 	return
 }
