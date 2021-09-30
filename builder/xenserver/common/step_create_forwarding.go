@@ -3,10 +3,9 @@ package common
 import (
 	"context"
 	"fmt"
-	"net"
-
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
 )
 
 type ForwardTarget struct {
@@ -14,7 +13,12 @@ type ForwardTarget struct {
 	Port func(multistep.StateBag) (int, error)
 	Key  string
 
-	listener net.Listener
+	forwarding proxy.ProxyForwarding
+}
+
+type forwardingInfo struct {
+	host string
+	port int
 }
 
 type StepCreateForwarding struct {
@@ -23,23 +27,15 @@ type StepCreateForwarding struct {
 
 func (self *StepCreateForwarding) close() {
 	for _, target := range self.Targets {
-		if target.listener != nil {
-			target.listener.Close()
+		if target.forwarding != nil {
+			target.forwarding.Close()
 		}
 	}
 }
 
 func (self *StepCreateForwarding) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-
-	proxyAddress, err := GetXenProxyAddress(state)
-
-	if err != nil {
-		err := fmt.Errorf("could not get proxy address: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
+	xenProxy := state.Get("xen_proxy").(proxy.XenProxy)
 
 	for _, target := range self.Targets {
 		host, err := target.Host(state)
@@ -62,9 +58,8 @@ func (self *StepCreateForwarding) Run(_ context.Context, state multistep.StateBa
 			return multistep.ActionHalt
 		}
 
-		address := fmt.Sprintf("%s:%d", host, port)
-
-		target.listener, err = CreatePortForwarding(proxyAddress, address)
+		forwarding := xenProxy.CreateForwarding(host, port)
+		err = forwarding.Start()
 
 		if err != nil {
 			self.close()
@@ -74,9 +69,12 @@ func (self *StepCreateForwarding) Run(_ context.Context, state multistep.StateBa
 			return multistep.ActionHalt
 		}
 
-		listenerAddr := target.listener.Addr().(*net.TCPAddr)
+		info := forwardingInfo{
+			host: forwarding.GetServiceHost(),
+			port: forwarding.GetServicePort(),
+		}
 
-		state.Put(target.Key, listenerAddr)
+		state.Put(target.Key, info)
 	}
 
 	return multistep.ActionContinue
@@ -92,7 +90,7 @@ func GetForwardedHost(state multistep.StateBag, key string) (string, error) {
 		return "", fmt.Errorf("key '%s' does not exist", key)
 	}
 
-	return address.(*net.TCPAddr).IP.String(), nil
+	return address.(forwardingInfo).host, nil
 }
 
 func GetForwardedPort(state multistep.StateBag, key string) (int, error) {
@@ -101,5 +99,5 @@ func GetForwardedPort(state multistep.StateBag, key string) (int, error) {
 		return 0, fmt.Errorf("key '%s' does not exist", key)
 	}
 
-	return address.(*net.TCPAddr).Port, nil
+	return address.(forwardingInfo).port, nil
 }

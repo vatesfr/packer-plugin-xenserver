@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/mitchellh/go-vnc"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
 	"io"
 	"log"
 	"net"
@@ -49,13 +50,14 @@ func GetVNCConsoleLocation(state multistep.StateBag) (string, error) {
 
 func CreateVNCConnection(state multistep.StateBag, location string) (net.Conn, error) {
 	xenClient := state.Get("client").(*Connection)
+	xenProxy := state.Get("xen_proxy").(proxy.XenProxy)
 
 	target, err := GetTcpAddressFromURL(location)
 	if err != nil {
 		return nil, err
 	}
 
-	rawConn, err := ConnectViaXenProxy(state, target)
+	rawConn, err := xenProxy.ConnectWithAddr(target)
 	if err != nil {
 		return nil, err
 	}

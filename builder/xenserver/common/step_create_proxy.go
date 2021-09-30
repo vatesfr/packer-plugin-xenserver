@@ -3,17 +3,17 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
 	"golang.org/x/crypto/ssh"
 	"log"
-	"net"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 type StepCreateProxy struct {
-	sshClient     *ssh.Client
-	socksListener net.Listener
+	sshClient   *ssh.Client
+	proxyServer proxy.XenProxy
 }
 
 func (self *StepCreateProxy) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
@@ -29,7 +29,9 @@ func (self *StepCreateProxy) Run(_ context.Context, state multistep.StateBag) mu
 		return multistep.ActionHalt
 	}
 
-	proxyServer, err := setupProxyServer(sshDialer(self.sshClient))
+	self.proxyServer = proxy.CreateProxy(config.SkipNatMapping, sshDialer(self.sshClient))
+
+	err = self.proxyServer.Start()
 	if err != nil {
 		err := fmt.Errorf("error creating socks proxy server: %s", err)
 		state.Put("error", err)
@@ -37,31 +39,16 @@ func (self *StepCreateProxy) Run(_ context.Context, state multistep.StateBag) mu
 		return multistep.ActionHalt
 	}
 
-	self.socksListener, err = net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		err := fmt.Errorf("error creating socks listener: %s", err)
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-
-	go func() {
-		err := proxyServer.Serve(self.socksListener)
-		if err != nil {
-			log.Printf("error in proxy server: %v", err)
-		}
-	}()
-
-	state.Put("xen_proxy_address", self.socksListener.Addr().String())
+	state.Put("xen_proxy", self.proxyServer)
 
 	return multistep.ActionContinue
 }
 
 func (self *StepCreateProxy) Cleanup(_ multistep.StateBag) {
-	if self.socksListener != nil {
-		err := self.socksListener.Close()
+	if self.proxyServer != nil {
+		err := self.proxyServer.Close()
 		if err != nil {
-			log.Printf("error cleaning up socket listener: %v", err)
+			log.Printf("error cleaning up proxy server: %v", err)
 			return
 		}
 	}

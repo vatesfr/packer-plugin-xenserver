@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -173,9 +174,8 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 			err = cmd.Run()
 		} else {
-			export_url := fmt.Sprintf("https://%s:%d/export?%suuid=%s&session_id=%s",
-				c.Host,
-				c.Port,
+			export_url := fmt.Sprintf("https://%s/export?%suuid=%s&session_id=%s",
+				net.JoinHostPort(c.Host, strconv.Itoa(c.Port)),
 				compress_option_url,
 				instance_uuid,
 				c.GetSession(),
@@ -244,11 +244,10 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 				// Basic auth in URL request is required as session token is not
 				// accepted for some reason.
 				// @todo: raise with XAPI team.
-				disk_export_url = fmt.Sprintf("https://%s:%s@%s:%d/export_raw_vdi?vdi=%s%s",
+				disk_export_url = fmt.Sprintf("https://%s:%s@%s/export_raw_vdi?vdi=%s%s",
 					c.Username,
 					c.Password,
-					c.Host,
-					c.Port,
+					net.JoinHostPort(c.Host, strconv.Itoa(c.Port)),
 					disk_uuid,
 					extrauri)
 

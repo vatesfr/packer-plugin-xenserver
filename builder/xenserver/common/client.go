@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
+	"strconv"
 
 	xmlrpc "github.com/amfranz/go-xmlrpc-client"
 	xenapi "github.com/terra-farm/go-xen-api-client"
@@ -953,7 +955,7 @@ func (c Connection) GetSession() string {
 }
 
 func NewXenAPIClient(host string, port int, username, password string) (*Connection, error) {
-	url := fmt.Sprintf("https://%s:%d/", host, port)
+	url := fmt.Sprintf("https://%s/", net.JoinHostPort(host, strconv.Itoa(port)))
 	client, err := xenapi.NewClient(url, nil)
 	if err != nil {
 		return nil, err

@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -83,9 +85,8 @@ func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) mu
 	}
 	state.Put(self.VdiUuidKey, vdiUuid)
 
-	_, err = HTTPUpload(fmt.Sprintf("https://%s:%d/import_raw_vdi?vdi=%s&session_id=%s",
-		c.Host,
-		c.Port,
+	_, err = HTTPUpload(fmt.Sprintf("https://%s/import_raw_vdi?vdi=%s&session_id=%s",
+		net.JoinHostPort(c.Host, strconv.Itoa(c.Port)),
 		vdi,
 		c.GetSession(),
 	), fh, state)
