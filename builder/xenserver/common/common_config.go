@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
+	"github.com/hashicorp/packer-plugin-sdk/shutdowncommand"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
@@ -31,7 +32,7 @@ type CommonConfig struct {
 	NetworkNames       []string `mapstructure:"network_names"`
 	ExportNetworkNames []string `mapstructure:"export_network_names"`
 
-	ShutdownCommand string `mapstructure:"shutdown_command"`
+	shutdowncommand.ShutdownConfig `mapstructure:",squash"`
 
 	RawBootWait string `mapstructure:"boot_wait"`
 	BootWait    time.Duration

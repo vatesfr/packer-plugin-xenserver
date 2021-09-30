@@ -41,7 +41,8 @@ type FlatConfig struct {
 	FloppyFiles               []string          `mapstructure:"floppy_files" cty:"floppy_files" hcl:"floppy_files"`
 	NetworkNames              []string          `mapstructure:"network_names" cty:"network_names" hcl:"network_names"`
 	ExportNetworkNames        []string          `mapstructure:"export_network_names" cty:"export_network_names" hcl:"export_network_names"`
-	ShutdownCommand           *string           `mapstructure:"shutdown_command" cty:"shutdown_command" hcl:"shutdown_command"`
+	ShutdownCommand           *string           `mapstructure:"shutdown_command" required:"false" cty:"shutdown_command" hcl:"shutdown_command"`
+	ShutdownTimeout           *string           `mapstructure:"shutdown_timeout" required:"false" cty:"shutdown_timeout" hcl:"shutdown_timeout"`
 	ToolsIsoName              *string           `mapstructure:"tools_iso_name" cty:"tools_iso_name" hcl:"tools_iso_name"`
 	Type                      *string           `mapstructure:"communicator" cty:"communicator" hcl:"communicator"`
 	PauseBeforeConnect        *string           `mapstructure:"pause_before_connecting" cty:"pause_before_connecting" hcl:"pause_before_connecting"`
@@ -161,6 +162,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"network_names":                &hcldec.AttrSpec{Name: "network_names", Type: cty.List(cty.String), Required: false},
 		"export_network_names":         &hcldec.AttrSpec{Name: "export_network_names", Type: cty.List(cty.String), Required: false},
 		"shutdown_command":             &hcldec.AttrSpec{Name: "shutdown_command", Type: cty.String, Required: false},
+		"shutdown_timeout":             &hcldec.AttrSpec{Name: "shutdown_timeout", Type: cty.String, Required: false},
 		"tools_iso_name":               &hcldec.AttrSpec{Name: "tools_iso_name", Type: cty.String, Required: false},
 		"communicator":                 &hcldec.AttrSpec{Name: "communicator", Type: cty.String, Required: false},
 		"pause_before_connecting":      &hcldec.AttrSpec{Name: "pause_before_connecting", Type: cty.String, Required: false},

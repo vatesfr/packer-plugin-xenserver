@@ -48,7 +48,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 					return power_state == xenapi.VMPowerStateHalted, err
 				},
 				PredicateInterval: 5 * time.Second,
-				Timeout:           300 * time.Second,
+				Timeout:           config.ShutdownTimeout,
 			}.Wait(state)
 
 			if err != nil {
