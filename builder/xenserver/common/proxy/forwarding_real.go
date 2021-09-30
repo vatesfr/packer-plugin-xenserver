@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"strconv"
 )
 
 type realProxyForwarding struct {
@@ -40,16 +41,22 @@ func (self *realProxyForwarding) Start() error {
 		self.ConnectionWrapper = identityWrapper
 	}
 
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	var err error
+	self.listener, err = net.Listen("tcp", "127.0.0.1:0")
 
 	if err != nil {
 		return fmt.Errorf("could not create port forward listener: %w", err)
 	}
 
+	clientAddr := net.JoinHostPort(self.GetServiceHost(), strconv.Itoa(self.GetServicePort()))
+	targetAddr := net.JoinHostPort(self.TargetHost, strconv.Itoa(self.TargetPort))
+	log.Printf("Starting forwarding %s -> %s", clientAddr, targetAddr)
+
 	go func() {
 		for {
-			accept, err := listener.Accept()
+			accept, err := self.listener.Accept()
 			if err != nil {
+				log.Printf("Stopped forwarding %s -> %s", clientAddr, targetAddr)
 				return
 			}
 
