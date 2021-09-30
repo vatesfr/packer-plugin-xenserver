@@ -14,87 +14,86 @@ import (
 	"strings"
 )
 
-type VNCConnectionWrapper struct {
-	TlsConn *tls.Conn
-	rawConn net.Conn
-}
-
-func (v VNCConnectionWrapper) Close() {
-	if v.TlsConn != nil {
-		_ = v.TlsConn.Close()
-	}
-
-	if v.rawConn != nil {
-		_ = v.rawConn.Close()
-	}
-}
-
-type VNCClientWrapper struct {
-	Client *vnc.ClientConn
-
-	connection *VNCConnectionWrapper
-}
-
-func (v VNCClientWrapper) Close() {
-	if v.Client != nil {
-		_ = v.Client.Close()
-	}
-
-	v.connection.Close()
-}
-
-func CreateVNCConnection(state multistep.StateBag, location string) (*VNCConnectionWrapper, error) {
+func GetVNCConsoleLocation(state multistep.StateBag) (string, error) {
 	xenClient := state.Get("client").(*Connection)
-	wrapper := VNCConnectionWrapper{}
+	config := state.Get("commonconfig").(CommonConfig)
 
-	var err error
+	vmRef, err := xenClient.client.VM.GetByNameLabel(xenClient.session, config.VMName)
 
-	target, err := getTcpAddress(location)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	wrapper.rawConn, err = ConnectViaXenProxy(state, target)
-	if err != nil {
-		return nil, err
+	if len(vmRef) != 1 {
+		return "", fmt.Errorf("expected to find a single VM, instead found '%d'. Ensure the VM name is unique", len(vmRef))
 	}
 
-	wrapper.TlsConn, err = httpConnectRequest(location, string(xenClient.GetSessionRef()), wrapper.rawConn)
+	consoles, err := xenClient.client.VM.GetConsoles(xenClient.session, vmRef[0])
+
 	if err != nil {
-		wrapper.Close()
-		return nil, err
+		return "", err
 	}
 
-	return &wrapper, nil
+	if len(consoles) != 1 {
+		return "", fmt.Errorf("expected to find a VM console, instead found '%d'. Ensure there is only one console", len(consoles))
+	}
+
+	location, err := xenClient.client.Console.GetLocation(xenClient.session, consoles[0])
+
+	if err != nil {
+		return "", err
+	}
+
+	return location, nil
 }
 
-func ConnectVNC(state multistep.StateBag, location string) (*VNCClientWrapper, error) {
-	wrapper := VNCClientWrapper{}
+func CreateVNCConnection(state multistep.StateBag, location string) (net.Conn, error) {
+	xenClient := state.Get("client").(*Connection)
 
-	var err error
-
-	wrapper.connection, err = CreateVNCConnection(state, location)
+	target, err := GetTcpAddressFromURL(location)
 	if err != nil {
 		return nil, err
 	}
 
-	wrapper.Client, err = vnc.Client(wrapper.connection.TlsConn, &vnc.ClientConfig{
+	rawConn, err := ConnectViaXenProxy(state, target)
+	if err != nil {
+		return nil, err
+	}
+
+	tlsConn, err := initializeVNCConnection(location, string(xenClient.GetSessionRef()), rawConn)
+	if err != nil {
+		rawConn.Close()
+		return nil, err
+	}
+
+	return tlsConn, nil
+}
+
+func CreateVNCClient(state multistep.StateBag, location string) (*vnc.ClientConn, error) {
+	var err error
+
+	connection, err := CreateVNCConnection(state, location)
+	if err != nil {
+		return nil, err
+	}
+
+	client, err := vnc.Client(connection, &vnc.ClientConfig{
 		Exclusive: false,
 	})
 	if err != nil {
-		wrapper.Close()
+		connection.Close()
 		return nil, err
 	}
 
-	return &wrapper, nil
+	return client, nil
 }
 
-func httpConnectRequest(location string, xenSessionRef string, proxyConnection net.Conn) (*tls.Conn, error) {
+func initializeVNCConnection(location string, xenSessionRef string, rawConn net.Conn) (*tls.Conn, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
 	}
 
-	tlsConnection := tls.Client(proxyConnection, tlsConfig)
+	tlsConnection := tls.Client(rawConn, tlsConfig)
 
 	request, err := http.NewRequest(http.MethodConnect, location, http.NoBody)
 
@@ -123,7 +122,7 @@ func httpConnectRequest(location string, xenSessionRef string, proxyConnection n
 	return tlsConnection, nil
 }
 
-func getTcpAddress(location string) (string, error) {
+func GetTcpAddressFromURL(location string) (string, error) {
 	parsedUrl, err := url.Parse(location)
 	if err != nil {
 		return "", err

@@ -27,7 +27,6 @@ type StepTypeBootCommand struct {
 func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*Connection)
 	httpPort := state.Get("http_port").(int)
 
 	var httpIP string
@@ -42,44 +41,25 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		return multistep.ActionContinue
 	}
 
-	vmRef, err := c.client.VM.GetByNameLabel(c.session, config.VMName)
-
+	location, err := GetVNCConsoleLocation(state)
 	if err != nil {
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-
-	if len(vmRef) != 1 {
-		ui.Error(fmt.Sprintf("expected to find a single VM, instead found '%d'. Ensure the VM name is unique", len(vmRef)))
-	}
-
-	consoles, err := c.client.VM.GetConsoles(c.session, vmRef[0])
-	if err != nil {
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
-	}
-
-	if len(consoles) != 1 {
-		ui.Error(fmt.Sprintf("expected to find a VM console, instead found '%d'. Ensure there is only one console", len(consoles)))
-		return multistep.ActionHalt
-	}
-
-	location, err := c.client.Console.GetLocation(c.session, consoles[0])
 
 	ui.Say(fmt.Sprintf("Connecting to the VM console VNC over xapi via %s", location))
 
-	vncConnectionWrapper, err := ConnectVNC(state, location)
+	vncClient, err := CreateVNCClient(state, location)
 
 	if err != nil {
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
-	defer vncConnectionWrapper.Close()
+	defer vncClient.Close()
 
-	log.Printf("Connected to the VNC console: %s", vncConnectionWrapper.Client.DesktopName)
+	log.Printf("Connected to the VNC console: %s", vncClient.DesktopName)
 
 	self.Ctx.Data = &bootCommandTemplateData{
 		config.VMName,
@@ -87,7 +67,7 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		uint(httpPort),
 	}
 
-	vncDriver := bootcommand.NewVNCDriver(vncConnectionWrapper.Client, config.VNCConfig.BootKeyInterval)
+	vncDriver := bootcommand.NewVNCDriver(vncClient, config.VNCConfig.BootKeyInterval)
 
 	ui.Say("Typing boot commands over VNC...")
 

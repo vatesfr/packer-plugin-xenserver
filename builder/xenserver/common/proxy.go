@@ -11,27 +11,6 @@ import (
 	"time"
 )
 
-type ProxyWrapper struct {
-	Client *ssh.Client
-
-	rawConnection net.Conn
-	sshConnection ssh.Conn
-}
-
-func (w ProxyWrapper) Close() {
-	if w.Client != nil {
-		w.Client.Close()
-	}
-
-	if w.sshConnection != nil {
-		w.sshConnection.Close()
-	}
-
-	if w.rawConnection != nil {
-		w.rawConnection.Close()
-	}
-}
-
 func GetXenProxyAddress(state multistep.StateBag) (string, error) {
 	proxyAddress, ok := state.GetOk("xen_proxy_address")
 
@@ -66,7 +45,7 @@ func ConnectViaProxy(proxyAddress, address string) (net.Conn, error) {
 	return c, nil
 }
 
-func ConnectSSHWithProxy(proxyAddress, host string, port int, username string, password string) (*ProxyWrapper, error) {
+func ConnectSSHWithProxy(proxyAddress, host string, port int, username string, password string) (*ssh.Client, error) {
 	connection, err := ConnectViaProxy(proxyAddress, fmt.Sprintf("%s:%d", host, port))
 
 	if err != nil {
@@ -111,16 +90,16 @@ func ConnectSSHWithProxy(proxyAddress, host string, port int, username string, p
 
 	sshClient := ssh.NewClient(sshConn, sshChan, req)
 
-	wrapper := ProxyWrapper{
-		Client:        sshClient,
-		rawConnection: connection,
-		sshConnection: sshConn,
-	}
-
-	return &wrapper, nil
+	return sshClient, nil
 }
 
 func CreatePortForwarding(proxyAddress, targetAddress string) (net.Listener, error) {
+	return CreateCustomPortForwarding(func() (net.Conn, error) {
+		return ConnectViaProxy(proxyAddress, targetAddress)
+	})
+}
+
+func CreateCustomPortForwarding(connectTarget func() (net.Conn, error)) (net.Listener, error) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 
 	if err != nil {
@@ -135,32 +114,22 @@ func CreatePortForwarding(proxyAddress, targetAddress string) (net.Listener, err
 				continue
 			}
 
-			go handleConnection(proxyAddress, targetAddress, accept)
+			go handleConnection(accept, connectTarget)
 		}
 	}()
 
 	return listener, nil
 }
 
-func handleConnection(proxyAddress, targetAddress string, accept net.Conn) {
-	defer accept.Close()
-	conn, err := ConnectViaProxy(proxyAddress, targetAddress)
-
-	if err != nil {
-		fmt.Printf("[FORWARD] Connect proxy Error: %v", err)
-		return
-	}
-
-	defer conn.Close()
-
+func serviceForwardedConnection(clientConn net.Conn, targetConn net.Conn) {
 	txDone := make(chan struct{})
 	rxDone := make(chan struct{})
 
 	go func() {
-		_, err := io.Copy(conn, accept)
+		_, err := io.Copy(targetConn, clientConn)
 
 		// Close conn so that other copy operation unblocks
-		conn.Close()
+		targetConn.Close()
 		close(txDone)
 
 		if err != nil {
@@ -170,10 +139,10 @@ func handleConnection(proxyAddress, targetAddress string, accept net.Conn) {
 	}()
 
 	go func() {
-		_, err := io.Copy(accept, conn)
+		_, err := io.Copy(clientConn, targetConn)
 
 		// Close accept so that other copy operation unblocks
-		accept.Close()
+		clientConn.Close()
 		close(rxDone)
 
 		if err != nil {
@@ -184,4 +153,18 @@ func handleConnection(proxyAddress, targetAddress string, accept net.Conn) {
 
 	<-txDone
 	<-rxDone
+}
+
+func handleConnection(clientConn net.Conn, connectTarget func() (net.Conn, error)) {
+	defer clientConn.Close()
+	targetConn, err := connectTarget()
+
+	if err != nil {
+		fmt.Printf("[FORWARD] Connect proxy Error: %v", err)
+		return
+	}
+
+	defer targetConn.Close()
+
+	serviceForwardedConnection(clientConn, targetConn)
 }

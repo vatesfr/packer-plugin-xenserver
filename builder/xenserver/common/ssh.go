@@ -61,7 +61,7 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 
 	defer sshClient.Close()
 
-	return doExecuteSSHCmd(cmd, sshClient.Client)
+	return doExecuteSSHCmd(cmd, sshClient)
 }
 
 func connectSSH(host string, port int, username string, password string) (*ssh.Client, error) {
