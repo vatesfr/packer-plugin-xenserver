@@ -88,7 +88,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
 	//Setup XAPI client
-	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.HostPort, self.config.Username, self.config.Password)
 
 	if err != nil {
 		return nil, err
@@ -145,6 +145,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
 		new(xscommon.StepHTTPIPDiscover),
+		&xscommon.StepCreateProxy{},
 		commonsteps.HTTPServerFromHTTPConfig(&self.config.HTTPConfig),
 		new(xscommon.StepBootWait),
 		&xscommon.StepTypeBootCommand{
@@ -154,11 +155,25 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Chan:    httpReqChan,
 			Timeout: 300 * time.Minute, /*self.config.InstallTimeout*/ // @todo change this
 		},
+		&xscommon.StepCreateForwarding{Targets: []xscommon.ForwardTarget{
+			{
+				Host: xscommon.InstanceCommIP,
+				Port: xscommon.InstanceCommPort,
+				Key:  "local_comm_address",
+			},
+		}},
 		&communicator.StepConnect{
-			Config:    &self.config.Comm,
-			Host:      xscommon.InstanceSSHIP,
+			Config: &self.config.Comm,
+			Host: func(state multistep.StateBag) (string, error) {
+				return xscommon.GetForwardedHost(state, "local_comm_address")
+			},
 			SSHConfig: self.config.Comm.SSHConfigFunc(),
-			SSHPort:   xscommon.InstanceSSHPort,
+			SSHPort: func(state multistep.StateBag) (int, error) {
+				return xscommon.GetForwardedPort(state, "local_comm_address")
+			},
+			WinRMPort: func(state multistep.StateBag) (int, error) {
+				return xscommon.GetForwardedPort(state, "local_comm_address")
+			},
 		},
 		new(commonsteps.StepProvision),
 		new(xscommon.StepShutdown),
