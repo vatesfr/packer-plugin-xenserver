@@ -8,3 +8,4 @@ builder-*
 dist/*
 vendor/*
 packer-plugin-xenserver
+.idea
