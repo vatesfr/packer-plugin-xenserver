@@ -943,6 +943,7 @@ type Connection struct {
 	client   *xenapi.Client
 	session  xenapi.SessionRef
 	Host     string
+	Port     int
 	Username string
 	Password string
 }
@@ -951,8 +952,9 @@ func (c Connection) GetSession() string {
 	return string(c.session)
 }
 
-func NewXenAPIClient(host, username, password string) (*Connection, error) {
-	client, err := xenapi.NewClient("https://"+host, nil)
+func NewXenAPIClient(host string, port int, username, password string) (*Connection, error) {
+	url := fmt.Sprintf("https://%s:%d/", host, port)
+	client, err := xenapi.NewClient(url, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -962,7 +964,7 @@ func NewXenAPIClient(host, username, password string) (*Connection, error) {
 		return nil, err
 	}
 
-	return &Connection{client, session, host, username, password}, nil
+	return &Connection{client, session, host, port, username, password}, nil
 }
 
 func (c *Connection) GetClient() *xenapi.Client {

@@ -17,9 +17,11 @@ type CommonConfig struct {
 	bootcommand.VNCConfig  `mapstructure:",squash"`
 	commonsteps.HTTPConfig `mapstructure:",squash"`
 
-	Username string `mapstructure:"remote_username"`
-	Password string `mapstructure:"remote_password"`
-	HostIp   string `mapstructure:"remote_host"`
+	Username    string `mapstructure:"remote_username"`
+	Password    string `mapstructure:"remote_password"`
+	HostIp      string `mapstructure:"remote_host"`
+	HostPort    int    `mapstructure:"remote_port"`
+	HostSSHPort int    `mapstructure:"remote_ssh_port"`
 
 	VMName             string   `mapstructure:"vm_name"`
 	VMDescription      string   `mapstructure:"vm_description"`
@@ -49,6 +51,14 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	var errs []error
 
 	// Set default values
+
+	if c.HostPort == 0 {
+		c.HostPort = 443
+	}
+
+	if c.HostSSHPort == 0 {
+		c.HostSSHPort = 22
+	}
 
 	if c.HostPortMin == 0 {
 		c.HostPortMin = 5900

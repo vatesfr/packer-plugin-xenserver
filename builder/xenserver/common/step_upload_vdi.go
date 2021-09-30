@@ -83,8 +83,9 @@ func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) mu
 	}
 	state.Put(self.VdiUuidKey, vdiUuid)
 
-	_, err = HTTPUpload(fmt.Sprintf("https://%s/import_raw_vdi?vdi=%s&session_id=%s",
+	_, err = HTTPUpload(fmt.Sprintf("https://%s:%d/import_raw_vdi?vdi=%s&session_id=%s",
 		c.Host,
+		c.Port,
 		vdi,
 		c.GetSession(),
 	), fh, state)

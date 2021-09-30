@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -159,7 +160,7 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 			cmd := exec.Command(
 				xe,
 				"-s", c.Host,
-				"-p", "443",
+				"-p", strconv.Itoa(c.Port),
 				"-u", c.Username,
 				"-pw", c.Password,
 				"vm-export",
@@ -172,8 +173,9 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 			err = cmd.Run()
 		} else {
-			export_url := fmt.Sprintf("https://%s/export?%suuid=%s&session_id=%s",
+			export_url := fmt.Sprintf("https://%s:%d/export?%suuid=%s&session_id=%s",
 				c.Host,
+				c.Port,
 				compress_option_url,
 				instance_uuid,
 				c.GetSession(),
@@ -242,10 +244,11 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 				// Basic auth in URL request is required as session token is not
 				// accepted for some reason.
 				// @todo: raise with XAPI team.
-				disk_export_url = fmt.Sprintf("https://%s:%s@%s/export_raw_vdi?vdi=%s%s",
+				disk_export_url = fmt.Sprintf("https://%s:%s@%s:%d/export_raw_vdi?vdi=%s%s",
 					c.Username,
 					c.Password,
 					c.Host,
+					c.Port,
 					disk_uuid,
 					extrauri)
 
