@@ -91,11 +91,12 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 	return multistep.ActionContinue
 }
 
-func InstanceSSHIP(state multistep.StateBag) (string, error) {
+func InstanceCommIP(state multistep.StateBag) (string, error) {
 	ip := state.Get("instance_ssh_address").(string)
 	return ip, nil
 }
 
-func InstanceSSHPort(state multistep.StateBag) (int, error) {
-	return 22, nil
+func InstanceCommPort(state multistep.StateBag) (int, error) {
+	config := state.Get("commonconfig").(CommonConfig)
+	return config.Comm.Port(), nil
 }
