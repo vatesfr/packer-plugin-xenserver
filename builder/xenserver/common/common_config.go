@@ -3,13 +3,11 @@ package common
 import (
 	"errors"
 	"fmt"
-	"github.com/hashicorp/packer-plugin-sdk/shutdowncommand"
-	"time"
-
 	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
+	"github.com/hashicorp/packer-plugin-sdk/shutdowncommand"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
@@ -34,9 +32,6 @@ type CommonConfig struct {
 
 	shutdowncommand.ShutdownConfig `mapstructure:",squash"`
 
-	RawBootWait string `mapstructure:"boot_wait"`
-	BootWait    time.Duration
-
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
 
 	CommConfig `mapstructure:",squash"`
@@ -47,10 +42,7 @@ type CommonConfig struct {
 	IPGetter  string `mapstructure:"ip_getter"`
 }
 
-func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) []error {
-	var err error
-	var errs []error
-
+func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) (warnings []string, errs []error) {
 	// Set default values
 
 	if c.HostPort == 0 {
@@ -59,10 +51,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	if c.HostSSHPort == 0 {
 		c.HostSSHPort = 22
-	}
-
-	if c.RawBootWait == "" {
-		c.RawBootWait = "5s"
 	}
 
 	if c.ToolsIsoName == "" {
@@ -119,11 +107,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		errs = append(errs, errors.New("the HTTP min port must be less than the max"))
 	}
 
-	c.BootWait, err = time.ParseDuration(c.RawBootWait)
-	if err != nil {
-		errs = append(errs, fmt.Errorf("Failed to parse boot_wait: %s", err))
-	}
-
 	switch c.Format {
 	case "xva", "xva_compressed", "vdi_raw", "vdi_vhd", "none":
 	default:
@@ -142,7 +125,15 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		errs = append(errs, errors.New("ip_getter must be one of 'auto', 'tools', 'http'"))
 	}
 
-	return errs
+	commConfigWarnings, es := c.CommConfig.Prepare(ctx)
+	errs = append(errs, es...)
+	warnings = append(warnings, commConfigWarnings...)
+
+	errs = append(errs, c.VNCConfig.Prepare(ctx)...)
+	errs = append(errs, c.HTTPConfig.Prepare(ctx)...)
+	errs = append(errs, c.ShutdownConfig.Prepare(ctx)...)
+
+	return warnings, errs
 }
 
 // steps should check config.ShouldKeepVM first before cleaning up the VM

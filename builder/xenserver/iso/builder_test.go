@@ -1,10 +1,11 @@
 package iso
 
 import (
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"reflect"
 	"testing"
 
-	"github.com/hashicorp/packer-plugin-sdk/packer"
+	"github.com/hashicorp/packer-plugin-sdk/common"
 )
 
 func testConfig() map[string]interface{} {
@@ -19,7 +20,7 @@ func testConfig() map[string]interface{} {
 		"shutdown_command":  "yes",
 		"ssh_username":      "foo",
 
-		packer.BuildNameConfigKey: "foo",
+		common.BuildNameConfigKey: "foo",
 	}
 }
 

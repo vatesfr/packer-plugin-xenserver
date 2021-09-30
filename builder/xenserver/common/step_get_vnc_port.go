@@ -18,6 +18,11 @@ func (self *StepGetVNCPort) Run(ctx context.Context, state multistep.StateBag) m
 	ui := state.Get("ui").(packer.Ui)
 	xenClient := state.Get("client").(*Connection)
 	xenProxy := state.Get("xen_proxy").(proxy.XenProxy)
+	config := state.Get("commonconfig").(CommonConfig)
+
+	if config.VNCConfig.DisableVNC {
+		return multistep.ActionContinue
+	}
 
 	ui.Say("Step: forward the instances VNC")
 

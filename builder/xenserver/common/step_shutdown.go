@@ -40,7 +40,8 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 				return false
 			}
 
-			ui.Message("Waiting for VM to enter Halted state...")
+			ui.Message(fmt.Sprintf("Waiting for VM to enter Halted state... Timeout after %s",
+				config.ShutdownTimeout.String()))
 
 			err = InterruptibleWait{
 				Predicate: func() (bool, error) {

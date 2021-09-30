@@ -32,10 +32,8 @@ func doExecuteSSHCmd(cmd string, client *ssh.Client) (stdout string, err error) 
 	return strings.Trim(b.String(), "\n"), nil
 }
 
-func ExecuteApiHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
-	config := state.Get("commonconfig").(CommonConfig)
-
-	sshClient, err := connectSSH(config.HostIp, config.HostSSHPort, config.Username, config.Password)
+func ExecuteSSHCmd(host string, port int, username, password, cmd string) (stdout string, err error) {
+	sshClient, err := connectSSH(host, port, username, password)
 	if err != nil {
 		return "", fmt.Errorf("Could not connect to ssh")
 	}
@@ -43,6 +41,11 @@ func ExecuteApiHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, 
 	defer sshClient.Close()
 
 	return doExecuteSSHCmd(cmd, sshClient)
+}
+
+func ExecuteApiHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
+	config := state.Get("commonconfig").(CommonConfig)
+	return ExecuteSSHCmd(config.HostIp, config.HostSSHPort, config.Username, config.Password, cmd)
 }
 
 func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {

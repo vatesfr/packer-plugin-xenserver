@@ -18,10 +18,10 @@ type CommConfig struct {
 
 	// These are deprecated, but we keep them around for backwards compatibility
 	// TODO: remove later
-	sshKeyPath        string `mapstructure:"ssh_key_path"`
-	sshSkipNatMapping bool   `mapstructure:"ssh_skip_nat_mapping"`
-	hostPortMin       int    `mapstructure:"host_port_min" required:"false"`
-	hostPortMax       int    `mapstructure:"host_port_max" required:"false"`
+	SSHKeyPath        string `mapstructure:"ssh_key_path"`
+	SSHSkipNatMapping bool   `mapstructure:"ssh_skip_nat_mapping"`
+	HostPortMin       int    `mapstructure:"host_port_min" required:"false"`
+	HostPortMax       int    `mapstructure:"host_port_max" required:"false"`
 }
 
 func (c *CommConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs []error) {
@@ -31,28 +31,28 @@ func (c *CommConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs 
 		"In future versions of Packer, inclusion of %s will error your builds."
 
 	// Backwards compatibility
-	if c.hostPortMin != 0 {
+	if c.HostPortMin != 0 {
 		warnings = append(warnings, fmt.Sprintf(removedHostPortFmt, "host_port_min", "host_port_min", "host_port_min"))
 	}
 
 	// Backwards compatibility
-	if c.hostPortMax != 0 {
+	if c.HostPortMax != 0 {
 		warnings = append(warnings, fmt.Sprintf(removedHostPortFmt, "host_port_max", "host_port_max", "host_port_max"))
 	}
 
 	// Backwards compatibility
-	if c.sshKeyPath != "" {
+	if c.SSHKeyPath != "" {
 		warnings = append(warnings, "ssh_key_path is deprecated and is being replaced by ssh_private_key_file. "+
 			"Please, update your template to use ssh_private_key_file. In future versions of Packer, inclusion of ssh_key_path will error your builds.")
-		c.Comm.SSHPrivateKeyFile = c.sshKeyPath
+		c.Comm.SSHPrivateKeyFile = c.SSHKeyPath
 	}
 
 	// Backwards compatibility
-	if c.sshSkipNatMapping {
+	if c.SSHSkipNatMapping {
 		warnings = append(warnings, "ssh_skip_nat_mapping is deprecated and is being replaced by skip_nat_mapping. "+
 			"Please, update your template to use skip_nat_mapping. In future versions of Packer, inclusion of ssh_skip_nat_mapping will error your builds.")
 
-		c.SkipNatMapping = c.sshSkipNatMapping
+		c.SkipNatMapping = c.SSHSkipNatMapping
 	}
 
 	if c.Comm.SSHHost == "" && c.SkipNatMapping {

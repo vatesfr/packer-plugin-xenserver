@@ -40,12 +40,12 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}, raws...)
 
 	if err != nil {
-		packer.MultiErrorAppend(errs, err)
+		errs = packer.MultiErrorAppend(errs, err)
 	}
 
-	errs = packer.MultiErrorAppend(
-		errs, self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
-	errs = packer.MultiErrorAppend(errs, self.config.Comm.Prepare(self.config.GetInterpContext())...)
+	commonWarnings, commonErrors := self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)
+	errs = packer.MultiErrorAppend(errs, commonErrors...)
+	warns = append(warns, commonWarnings...)
 
 	// Set default values
 
@@ -154,7 +154,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		retErr = errors.New(errs.Error())
 	}
 
-	return nil, nil, retErr
+	return nil, warns, retErr
 
 }
 

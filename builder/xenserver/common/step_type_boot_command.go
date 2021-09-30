@@ -29,16 +29,20 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	ui := state.Get("ui").(packer.Ui)
 	httpPort := state.Get("http_port").(int)
 
-	var httpIP string
-	if config.HTTPAddress != "0.0.0.0" {
-		httpIP = config.HTTPAddress
-	} else {
-		httpIP = state.Get("http_ip").(string)
+	if config.VNCConfig.DisableVNC {
+		return multistep.ActionContinue
 	}
 
 	// skip this step if we have nothing to type
 	if len(config.BootCommand) == 0 {
 		return multistep.ActionContinue
+	}
+
+	var httpIP string
+	if config.HTTPAddress != "0.0.0.0" {
+		httpIP = config.HTTPAddress
+	} else {
+		httpIP = state.Get("http_ip").(string)
 	}
 
 	location, err := GetVNCConsoleLocation(state)
