@@ -34,7 +34,7 @@ func (self *StepSetVmHostSshAddress) Run(ctx context.Context, state multistep.St
 		ui.Error(fmt.Sprintf("Unable to get address from VM Host: %s", err.Error()))
 	}
 
-	state.Put("ssh_address", address)
+	state.Put("vm_host_address", address)
 	ui.Say(fmt.Sprintf("Set host SSH address to '%s'.", address))
 
 	return multistep.ActionContinue
