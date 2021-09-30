@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/proxy"
 	"io"
+	"log"
 	"net"
 	"time"
 )
@@ -110,8 +111,7 @@ func CreateCustomPortForwarding(connectTarget func() (net.Conn, error)) (net.Lis
 		for {
 			accept, err := listener.Accept()
 			if err != nil {
-				fmt.Printf("error accepting: %v", err)
-				continue
+				return
 			}
 
 			go handleConnection(accept, connectTarget)
@@ -128,12 +128,14 @@ func serviceForwardedConnection(clientConn net.Conn, targetConn net.Conn) {
 	go func() {
 		_, err := io.Copy(targetConn, clientConn)
 
+		log.Printf("[FORWARD] proxy client closed connection")
+
 		// Close conn so that other copy operation unblocks
 		targetConn.Close()
 		close(txDone)
 
 		if err != nil {
-			fmt.Printf("[FORWARD] Error conn <- accept: %v", err)
+			log.Printf("[FORWARD] Error conn <- accept: %v", err)
 			return
 		}
 	}()
@@ -141,12 +143,14 @@ func serviceForwardedConnection(clientConn net.Conn, targetConn net.Conn) {
 	go func() {
 		_, err := io.Copy(clientConn, targetConn)
 
+		log.Printf("[FORWARD] proxy target closed connection")
+
 		// Close accept so that other copy operation unblocks
 		clientConn.Close()
 		close(rxDone)
 
 		if err != nil {
-			fmt.Printf("[FORWARD] Error accept <- conn: %v", err)
+			log.Printf("[FORWARD] Error accept <- conn: %v", err)
 			return
 		}
 	}()
@@ -160,7 +164,7 @@ func handleConnection(clientConn net.Conn, connectTarget func() (net.Conn, error
 	targetConn, err := connectTarget()
 
 	if err != nil {
-		fmt.Printf("[FORWARD] Connect proxy Error: %v", err)
+		log.Printf("[FORWARD] Connect proxy Error: %v", err)
 		return
 	}
 

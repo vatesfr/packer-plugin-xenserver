@@ -78,7 +78,7 @@ func CreateVNCClient(state multistep.StateBag, location string) (*vnc.ClientConn
 	}
 
 	client, err := vnc.Client(connection, &vnc.ClientConfig{
-		Exclusive: false,
+		Exclusive: true,
 	})
 	if err != nil {
 		connection.Close()

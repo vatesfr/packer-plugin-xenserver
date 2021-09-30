@@ -151,6 +151,10 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&xscommon.StepTypeBootCommand{
 			Ctx: *self.config.GetInterpContext(),
 		},
+		/*
+			VNC is only available after boot command because xenserver doesn't seem to support two vnc connections at the same time
+		*/
+		&xscommon.StepGetVNCPort{},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
 			Timeout: 300 * time.Minute, /*self.config.InstallTimeout*/ // @todo change this
