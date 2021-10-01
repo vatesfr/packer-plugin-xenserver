@@ -1,4 +1,4 @@
-package common
+package ssh
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ func doExecuteSSHCmd(cmd string, client *ssh.Client) (stdout string, err error) 
 }
 
 func ExecuteSSHCmd(host string, port int, username, password, cmd string) (stdout string, err error) {
-	sshClient, err := connectSSH(host, port, username, password)
+	sshClient, err := ConnectSSH(host, port, username, password)
 	if err != nil {
 		return "", fmt.Errorf("Could not connect to ssh")
 	}
@@ -65,7 +65,7 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 	return doExecuteSSHCmd(cmd, sshClient)
 }
 
-func connectSSH(host string, port int, username string, password string) (*ssh.Client, error) {
+func ConnectSSH(host string, port int, username string, password string) (*ssh.Client, error) {
 	address := net.JoinHostPort(host, strconv.Itoa(port))
 	log.Printf("Connecting with ssh to %s", address)
 
@@ -132,7 +132,7 @@ func ConnectSSHWithProxy(proxy proxy.XenProxy, host string, port int, username s
 	return sshClient, nil
 }
 
-func sshDialer(client *ssh.Client) func(ctx context.Context, network, addr string) (net.Conn, error) {
+func SSHDialer(client *ssh.Client) func(ctx context.Context, network, addr string) (net.Conn, error) {
 	return func(ctx context.Context, network, addr string) (net.Conn, error) {
 		return client.Dial("tcp", addr)
 	}

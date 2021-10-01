@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/ssh"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"time"
@@ -99,7 +100,7 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	err = InterruptibleWait{
 		Predicate: func() (success bool, err error) {
 			ui.Message(fmt.Sprintf("Attempting to ping interface: %s", ping_cmd))
-			_, err = ExecuteHostSSHCmd(state, ping_cmd)
+			_, err = ssh.ExecuteHostSSHCmd(state, ping_cmd)
 
 			switch err.(type) {
 			case nil:

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
+	ssh2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/ssh"
 	"golang.org/x/crypto/ssh"
 	"log"
 
@@ -22,7 +23,7 @@ func (self *StepCreateProxy) Run(_ context.Context, state multistep.StateBag) mu
 	ui := state.Get("ui").(packer.Ui)
 
 	var err error
-	self.sshClient, err = connectSSH(config.HostIp, config.HostSSHPort, config.Username, config.Password)
+	self.sshClient, err = ssh2.ConnectSSH(config.HostIp, config.HostSSHPort, config.Username, config.Password)
 	if err != nil {
 		err := fmt.Errorf("error connecting to hypervisor with ssh: %s", err)
 		state.Put("error", err)
@@ -30,7 +31,7 @@ func (self *StepCreateProxy) Run(_ context.Context, state multistep.StateBag) mu
 		return multistep.ActionHalt
 	}
 
-	self.proxyServer = proxy.CreateProxy(config.SkipNatMapping, sshDialer(self.sshClient))
+	self.proxyServer = proxy.CreateProxy(config.SkipNatMapping, ssh2.SSHDialer(self.sshClient))
 
 	err = self.proxyServer.Start()
 	if err != nil {

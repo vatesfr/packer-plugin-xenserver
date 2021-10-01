@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/ssh"
 	"strings"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -18,7 +19,7 @@ func (s *StepHTTPIPDiscover) Run(ctx context.Context, state multistep.StateBag) 
 	ui := state.Get("ui").(packersdk.Ui)
 
 	// find local ip
-	envVar, err := ExecuteApiHostSSHCmd(state, "echo $SSH_CLIENT")
+	envVar, err := ssh.ExecuteApiHostSSHCmd(state, "echo $SSH_CLIENT")
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error detecting local IP: %s", err))
 		return multistep.ActionHalt
