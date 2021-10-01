@@ -1,9 +1,10 @@
-package common
+package steps
 
 import (
 	"context"
 	"fmt"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/util"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -23,7 +24,7 @@ func (self *StepBootWait) Run(ctx context.Context, state multistep.StateBag) mul
 
 	if int64(config.BootWait) > 0 {
 		ui.Say(fmt.Sprintf("Waiting %s for boot...", config.BootWait))
-		err := InterruptibleWait{Timeout: config.BootWait}.Wait(state)
+		err := util.InterruptibleWait{Timeout: config.BootWait}.Wait(state)
 		if err != nil {
 			ui.Error(err.Error())
 			return multistep.ActionHalt

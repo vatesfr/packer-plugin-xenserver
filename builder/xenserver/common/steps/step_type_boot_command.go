@@ -1,4 +1,4 @@
-package common
+package steps
 
 /*
 Heavily borrowed from builder/quemu/step_type_boot_command.go

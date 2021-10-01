@@ -1,9 +1,10 @@
-package common
+package steps
 
 import (
 	"context"
 	"fmt"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/util"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"time"
 
@@ -38,7 +39,7 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 	}
 
 	var ip string
-	err = InterruptibleWait{
+	err = util.InterruptibleWait{
 		Timeout:           self.Timeout,
 		PredicateInterval: 5 * time.Second,
 		Predicate: func() (result bool, err error) {

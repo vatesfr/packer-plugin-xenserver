@@ -1,9 +1,10 @@
-package common
+package steps
 
 import (
 	"context"
 	"fmt"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/util"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"time"
@@ -45,7 +46,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 			ui.Message(fmt.Sprintf("Waiting for VM to enter Halted state... Timeout after %s",
 				config.ShutdownTimeout.String()))
 
-			err = InterruptibleWait{
+			err = util.InterruptibleWait{
 				Predicate: func() (bool, error) {
 					power_state, err := c.GetClient().VM.GetPowerState(c.GetSessionRef(), instance)
 					return power_state == xenapi.VMPowerStateHalted, err

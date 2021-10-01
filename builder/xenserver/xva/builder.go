@@ -6,6 +6,7 @@ import (
 	"fmt"
 	artifact2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/artifact"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
+	steps2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/steps"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xsclient "github.com/terra-farm/go-xen-api-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type Builder struct {
@@ -114,14 +114,14 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 
 	//Build the steps
 	steps := []multistep.Step{
-		&xscommon.StepPrepareOutputDir{
+		&steps2.StepPrepareOutputDir{
 			Force: self.config.PackerForce,
 			Path:  self.config.OutputDir,
 		},
 		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 		},
-		&xscommon.StepUploadVdi{
+		&steps2.StepUploadVdi{
 			VdiNameFunc: func() string {
 				return "Packer-floppy-disk"
 			},
@@ -133,65 +133,65 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			},
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
-		&xscommon.StepFindVdi{
+		&steps2.StepFindVdi{
 			VdiName:    self.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
 		new(stepImportInstance),
-		&xscommon.StepAttachVdi{
+		&steps2.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 			VdiType:    xsclient.VbdTypeFloppy,
 		},
-		&xscommon.StepAttachVdi{
+		&steps2.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.VbdTypeCD,
 		},
-		new(xscommon.StepStartVmPaused),
-		new(xscommon.StepSetVmHostSshAddress),
-		new(xscommon.StepHTTPIPDiscover),
-		&xscommon.StepCreateProxy{},
+		new(steps2.StepStartVmPaused),
+		new(steps2.StepSetVmHostSshAddress),
+		new(steps2.StepHTTPIPDiscover),
+		&steps2.StepCreateProxy{},
 		commonsteps.HTTPServerFromHTTPConfig(&self.config.HTTPConfig),
-		new(xscommon.StepBootWait),
-		&xscommon.StepTypeBootCommand{
+		new(steps2.StepBootWait),
+		&steps2.StepTypeBootCommand{
 			Ctx: *self.config.GetInterpContext(),
 		},
 		/*
 			VNC is only available after boot command because xenserver doesn't seem to support two vnc connections at the same time
 		*/
-		&xscommon.StepGetVNCPort{},
-		&xscommon.StepWaitForIP{
+		&steps2.StepGetVNCPort{},
+		&steps2.StepWaitForIP{
 			Chan:    httpReqChan,
 			Timeout: 300 * time.Minute, /*self.config.InstallTimeout*/ // @todo change this
 		},
-		&xscommon.StepCreateForwarding{Targets: []xscommon.ForwardTarget{
+		&steps2.StepCreateForwarding{Targets: []steps2.ForwardTarget{
 			{
-				Host: xscommon.InstanceCommIP,
-				Port: xscommon.InstanceCommPort,
+				Host: steps2.InstanceCommIP,
+				Port: steps2.InstanceCommPort,
 				Key:  "local_comm_address",
 			},
 		}},
 		&communicator.StepConnect{
 			Config: &self.config.Comm,
 			Host: func(state multistep.StateBag) (string, error) {
-				return xscommon.GetForwardedHost(state, "local_comm_address")
+				return steps2.GetForwardedHost(state, "local_comm_address")
 			},
 			SSHConfig: self.config.Comm.SSHConfigFunc(),
 			SSHPort: func(state multistep.StateBag) (int, error) {
-				return xscommon.GetForwardedPort(state, "local_comm_address")
+				return steps2.GetForwardedPort(state, "local_comm_address")
 			},
 			WinRMPort: func(state multistep.StateBag) (int, error) {
-				return xscommon.GetForwardedPort(state, "local_comm_address")
+				return steps2.GetForwardedPort(state, "local_comm_address")
 			},
 		},
 		new(commonsteps.StepProvision),
-		new(xscommon.StepShutdown),
-		&xscommon.StepDetachVdi{
+		new(steps2.StepShutdown),
+		&steps2.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
-		&xscommon.StepDetachVdi{
+		&steps2.StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 		},
-		new(xscommon.StepExport),
+		new(steps2.StepExport),
 	}
 
 	self.runner = &multistep.BasicRunner{Steps: steps}

@@ -1,4 +1,4 @@
-package common
+package steps
 
 /* Taken from https://raw.githubusercontent.com/hashicorp/packer/master/builder/qemu/step_prepare_output_dir.go */
 

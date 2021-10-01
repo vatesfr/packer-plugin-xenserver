@@ -1,9 +1,10 @@
-package common
+package steps
 
 import (
 	"fmt"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/ssh"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/util"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"time"
@@ -62,7 +63,7 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	var himn_iface_ip string = ""
 
 	// Obtain the allocated IP
-	err = InterruptibleWait{
+	err = util.InterruptibleWait{
 		Predicate: func() (found bool, err error) {
 			ips, err := c.GetClient().Network.GetAssignedIps(c.GetSessionRef(), himn)
 			if err != nil {
@@ -97,7 +98,7 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 
 	ping_cmd := fmt.Sprintf("ping -c 1 %s", himn_iface_ip)
 
-	err = InterruptibleWait{
+	err = util.InterruptibleWait{
 		Predicate: func() (success bool, err error) {
 			ui.Message(fmt.Sprintf("Attempting to ping interface: %s", ping_cmd))
 			_, err = ssh.ExecuteHostSSHCmd(state, ping_cmd)

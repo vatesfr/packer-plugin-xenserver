@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	xsclient "github.com/terra-farm/go-xen-api-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type stepImportInstance struct {
@@ -43,7 +42,7 @@ func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBa
 		return multistep.ActionHalt
 	}
 
-	result, err := xscommon.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%s&sr_id=%s",
+	result, err := xen.HTTPUpload(fmt.Sprintf("https://%s/import?session_id=%s&sr_id=%s",
 		net.JoinHostPort(c.Host, strconv.Itoa(c.Port)),
 		c.GetSession(),
 		sr,

@@ -1,9 +1,9 @@
-package common
+package xen
 
 import (
 	"crypto/tls"
 	"fmt"
-	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/util"
 	"log"
 	"net/http"
 	"net/url"
@@ -28,7 +28,7 @@ func appendQuery(urlstring, k, v string) (string, error) {
 
 func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (result string, err error) {
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*xen.Connection)
+	c := state.Get("client").(*Connection)
 
 	task, err := c.GetClient().Task.Create(c.GetSessionRef(), "packer-task", "Packer task")
 	if err != nil {
@@ -75,7 +75,7 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 	}
 
 	logIteration := 0
-	err = InterruptibleWait{
+	err = util.InterruptibleWait{
 		Predicate: func() (bool, error) {
 			status, err := c.GetClient().Task.GetStatus(c.GetSessionRef(), task)
 			if err != nil {
