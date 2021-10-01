@@ -3,7 +3,6 @@ package iso
 import (
 	"context"
 	"fmt"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 
@@ -21,7 +20,7 @@ type stepCreateInstance struct {
 func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	c := state.Get("client").(*xen.Connection)
-	config := state.Get("config").(xscommon.Config)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Create Instance")
@@ -228,7 +227,7 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 }
 
 func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(xscommon.Config)
+	config := state.Get("config").(Config)
 	if config.ShouldKeepVM(state) {
 		return
 	}

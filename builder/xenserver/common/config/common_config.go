@@ -7,13 +7,16 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
+	packersdk "github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/shutdowncommand"
+	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 )
 
 type CommonConfig struct {
+	common.PackerConfig    `mapstructure:",squash"`
 	bootcommand.VNCConfig  `mapstructure:",squash"`
 	commonsteps.HTTPConfig `mapstructure:",squash"`
 
@@ -31,6 +34,11 @@ type CommonConfig struct {
 	NetworkNames       []string `mapstructure:"network_names"`
 	ExportNetworkNames []string `mapstructure:"export_network_names"`
 
+	VCPUsMax       uint              `mapstructure:"vcpus_max"`
+	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`
+	VMMemory       uint              `mapstructure:"vm_memory"`
+	PlatformArgs   map[string]string `mapstructure:"platform_args"`
+
 	shutdowncommand.ShutdownConfig `mapstructure:",squash"`
 
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
@@ -41,10 +49,55 @@ type CommonConfig struct {
 	Format    string `mapstructure:"format"`
 	KeepVM    string `mapstructure:"keep_vm"`
 	IPGetter  string `mapstructure:"ip_getter"`
+
+	Firmware string `mapstructure:"firmware"`
+
+	ctx interpolate.Context
 }
 
-func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) (warnings []string, errs []error) {
+func (c *CommonConfig) GetInterpContext() *interpolate.Context {
+	return &c.ctx
+}
+
+func (c *CommonConfig) Prepare(upper interface{}, raws ...interface{}) ([]string, []string, error) {
+
+	err := hconfig.Decode(upper, &hconfig.DecodeOpts{
+		Interpolate: true,
+		InterpolateFilter: &interpolate.RenderFilter{
+			Exclude: []string{
+				"boot_command",
+			},
+		},
+	}, raws...)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var errs *packersdk.MultiError
+	var warnings []string
+
 	// Set default values
+
+	if c.VCPUsMax == 0 {
+		c.VCPUsMax = 1
+	}
+
+	if c.VCPUsAtStartup == 0 {
+		c.VCPUsAtStartup = 1
+	}
+
+	if c.VCPUsAtStartup > c.VCPUsMax {
+		c.VCPUsAtStartup = c.VCPUsMax
+	}
+
+	if c.VMMemory == 0 {
+		c.VMMemory = 1024
+	}
+
+	if c.Firmware == "" {
+		c.Firmware = "bios"
+	}
 
 	if c.HostPort == 0 {
 		c.HostPort = 443
@@ -71,11 +124,11 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	}
 
 	if c.OutputDir == "" {
-		c.OutputDir = fmt.Sprintf("output-%s", pc.PackerBuildName)
+		c.OutputDir = fmt.Sprintf("output-%s", c.PackerConfig.PackerBuildName)
 	}
 
 	if c.VMName == "" {
-		c.VMName = fmt.Sprintf("packer-%s-{{timestamp}}", pc.PackerBuildName)
+		c.VMName = fmt.Sprintf("packer-%s-{{timestamp}}", c.PackerConfig.PackerBuildName)
 	}
 
 	if c.Format == "" {
@@ -90,51 +143,62 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		c.IPGetter = "auto"
 	}
 
+	if len(c.PlatformArgs) == 0 {
+		pargs := make(map[string]string)
+		pargs["viridian"] = "false"
+		pargs["nx"] = "true"
+		pargs["pae"] = "true"
+		pargs["apic"] = "true"
+		pargs["timeoffset"] = "0"
+		pargs["acpi"] = "1"
+		c.PlatformArgs = pargs
+	}
+
 	// Validation
 
 	if c.Username == "" {
-		errs = append(errs, errors.New("remote_username must be specified."))
+		errs = packersdk.MultiErrorAppend(errs, errors.New("remote_username must be specified."))
 	}
 
 	if c.Password == "" {
-		errs = append(errs, errors.New("remote_password must be specified."))
+		errs = packersdk.MultiErrorAppend(errs, errors.New("remote_password must be specified."))
 	}
 
 	if c.HostIp == "" {
-		errs = append(errs, errors.New("remote_host must be specified."))
+		errs = packersdk.MultiErrorAppend(errs, errors.New("remote_host must be specified."))
 	}
 
 	if c.HTTPPortMin > c.HTTPPortMax {
-		errs = append(errs, errors.New("the HTTP min port must be less than the max"))
+		errs = packersdk.MultiErrorAppend(errs, errors.New("the HTTP min port must be less than the max"))
 	}
 
 	switch c.Format {
 	case "xva", "xva_compressed", "vdi_raw", "vdi_vhd", "none":
 	default:
-		errs = append(errs, errors.New("format must be one of 'xva', 'vdi_raw', 'vdi_vhd', 'none'"))
+		errs = packersdk.MultiErrorAppend(errs, errors.New("format must be one of 'xva', 'vdi_raw', 'vdi_vhd', 'none'"))
 	}
 
 	switch c.KeepVM {
 	case "always", "never", "on_success":
 	default:
-		errs = append(errs, errors.New("keep_vm must be one of 'always', 'never', 'on_success'"))
+		errs = packersdk.MultiErrorAppend(errs, errors.New("keep_vm must be one of 'always', 'never', 'on_success'"))
 	}
 
 	switch c.IPGetter {
 	case "auto", "tools", "http":
 	default:
-		errs = append(errs, errors.New("ip_getter must be one of 'auto', 'tools', 'http'"))
+		errs = packersdk.MultiErrorAppend(errs, errors.New("ip_getter must be one of 'auto', 'tools', 'http'"))
 	}
 
-	commConfigWarnings, es := c.CommConfig.Prepare(ctx)
-	errs = append(errs, es...)
+	commConfigWarnings, es := c.CommConfig.Prepare(&c.ctx)
+	errs = packersdk.MultiErrorAppend(errs, es...)
 	warnings = append(warnings, commConfigWarnings...)
 
-	errs = append(errs, c.VNCConfig.Prepare(ctx)...)
-	errs = append(errs, c.HTTPConfig.Prepare(ctx)...)
-	errs = append(errs, c.ShutdownConfig.Prepare(ctx)...)
+	errs = packersdk.MultiErrorAppend(errs, c.VNCConfig.Prepare(&c.ctx)...)
+	errs = packersdk.MultiErrorAppend(errs, c.HTTPConfig.Prepare(&c.ctx)...)
+	errs = packersdk.MultiErrorAppend(errs, c.ShutdownConfig.Prepare(&c.ctx)...)
 
-	return warnings, errs
+	return nil, warnings, errs
 }
 
 // steps should check config.ShouldKeepVM first before cleaning up the VM

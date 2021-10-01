@@ -3,7 +3,6 @@ package xva
 import (
 	"context"
 	"fmt"
-	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"net"
 	"os"
@@ -22,7 +21,7 @@ type stepImportInstance struct {
 func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	c := state.Get("client").(*xen.Connection)
-	config := state.Get("config").(config2.Config)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Import Instance")

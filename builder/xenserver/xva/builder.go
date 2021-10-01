@@ -3,9 +3,7 @@ package xva
 import (
 	"context"
 	"errors"
-	"fmt"
 	artifact2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/artifact"
-	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	steps2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/steps"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"time"
@@ -15,79 +13,18 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	commonsteps "github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
-	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
-	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xsclient "github.com/terra-farm/go-xen-api-client"
 )
 
 type Builder struct {
-	config config2.Config
+	config Config
 	runner multistep.Runner
 }
 
 func (self *Builder) ConfigSpec() hcldec.ObjectSpec { return self.config.FlatMapstructure().HCL2Spec() }
 
-func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []string, retErr error) {
-
-	var errs *packer.MultiError
-
-	err := hconfig.Decode(&self.config, &hconfig.DecodeOpts{
-		Interpolate: true,
-		InterpolateFilter: &interpolate.RenderFilter{
-			Exclude: []string{
-				"boot_command",
-			},
-		},
-	}, raws...)
-
-	if err != nil {
-		errs = packer.MultiErrorAppend(errs, err)
-	}
-
-	commonWarnings, commonErrors := self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)
-	errs = packer.MultiErrorAppend(errs, commonErrors...)
-	warns = append(warns, commonWarnings...)
-
-	// Set default values
-	if self.config.VCPUsMax == 0 {
-		self.config.VCPUsMax = 1
-	}
-
-	if self.config.VCPUsAtStartup == 0 {
-		self.config.VCPUsAtStartup = 1
-	}
-
-	if self.config.VCPUsAtStartup > self.config.VCPUsMax {
-		self.config.VCPUsAtStartup = self.config.VCPUsMax
-	}
-
-	if self.config.VMMemory == 0 {
-		self.config.VMMemory = 1024
-	}
-
-	if len(self.config.PlatformArgs) == 0 {
-		pargs := make(map[string]string)
-		pargs["viridian"] = "false"
-		pargs["nx"] = "true"
-		pargs["pae"] = "true"
-		pargs["apic"] = "true"
-		pargs["timeoffset"] = "0"
-		pargs["acpi"] = "1"
-		self.config.PlatformArgs = pargs
-	}
-
-	// Validation
-
-	if self.config.SourcePath == "" {
-		errs = packer.MultiErrorAppend(errs, fmt.Errorf("A source_path must be specified"))
-	}
-
-	if len(errs.Errors) > 0 {
-		retErr = errors.New(errs.Error())
-	}
-
-	return nil, warns, retErr
-
+func (b *Builder) Prepare(raws ...interface{}) (params []string, warns []string, errors error) {
+	return b.config.Prepare(raws...)
 }
 
 func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
