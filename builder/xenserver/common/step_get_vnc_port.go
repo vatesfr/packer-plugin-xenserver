@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/vnc"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"net"
 	"strconv"
@@ -28,14 +29,14 @@ func (self *StepGetVNCPort) Run(ctx context.Context, state multistep.StateBag) m
 
 	ui.Say("Step: forward the instances VNC")
 
-	location, err := GetVNCConsoleLocation(state)
+	location, err := vnc.GetVNCConsoleLocation(state)
 	if err != nil {
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
-	target, err := GetTcpAddressFromURL(location)
+	target, err := vnc.GetTcpAddressFromURL(location)
 	if err != nil {
 		state.Put("error", err)
 		ui.Error(err.Error())
@@ -59,7 +60,7 @@ func (self *StepGetVNCPort) Run(ctx context.Context, state multistep.StateBag) m
 	}
 
 	self.forwarding = xenProxy.CreateWrapperForwarding(host, port, func(rawConn net.Conn) (net.Conn, error) {
-		return initializeVNCConnection(location, string(xenClient.GetSessionRef()), rawConn)
+		return vnc.InitializeVNCConnection(location, string(xenClient.GetSessionRef()), rawConn)
 	})
 
 	err = self.forwarding.Start()

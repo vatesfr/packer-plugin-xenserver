@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/vnc"
 	"log"
 )
 
@@ -46,7 +47,7 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		httpIP = state.Get("http_ip").(string)
 	}
 
-	location, err := GetVNCConsoleLocation(state)
+	location, err := vnc.GetVNCConsoleLocation(state)
 	if err != nil {
 		state.Put("error", err)
 		ui.Error(err.Error())
@@ -55,7 +56,7 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 
 	ui.Say(fmt.Sprintf("Connecting to the VM console VNC over xapi via %s", location))
 
-	vncClient, err := CreateVNCClient(state, location)
+	vncClient, err := vnc.CreateVNCClient(state, location)
 
 	if err != nil {
 		ui.Error(err.Error())

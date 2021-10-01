@@ -1,4 +1,4 @@
-package common
+package vnc
 
 import (
 	"crypto/tls"
@@ -64,7 +64,7 @@ func CreateVNCConnection(state multistep.StateBag, location string) (net.Conn, e
 		return nil, err
 	}
 
-	tlsConn, err := initializeVNCConnection(location, string(xenClient.GetSessionRef()), rawConn)
+	tlsConn, err := InitializeVNCConnection(location, string(xenClient.GetSessionRef()), rawConn)
 	if err != nil {
 		rawConn.Close()
 		return nil, err
@@ -92,7 +92,7 @@ func CreateVNCClient(state multistep.StateBag, location string) (*vnc.ClientConn
 	return client, nil
 }
 
-func initializeVNCConnection(location string, xenSessionRef string, rawConn net.Conn) (*tls.Conn, error) {
+func InitializeVNCConnection(location string, xenSessionRef string, rawConn net.Conn) (*tls.Conn, error) {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
 	}
