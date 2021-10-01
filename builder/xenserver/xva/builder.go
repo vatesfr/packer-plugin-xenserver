@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	artifact2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/artifact"
 	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"time"
@@ -208,7 +209,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		return nil, errors.New("Build was halted.")
 	}
 
-	artifact, _ := xscommon.NewArtifact(self.config.OutputDir)
+	artifact, _ := artifact2.NewArtifact(self.config.OutputDir)
 
 	return artifact, nil
 }
