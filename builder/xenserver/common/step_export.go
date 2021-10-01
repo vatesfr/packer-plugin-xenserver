@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"io"
 	"net"
 	"net/http"
@@ -85,33 +86,33 @@ func downloadFile(url, filename string, ui packer.Ui) (err error) {
 func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*Connection)
+	c := state.Get("client").(*xen.Connection)
 	instance_uuid := state.Get("instance_uuid").(string)
 	suffix := ".vhd"
 	extrauri := "&format=vhd"
 
-	instance, err := c.client.VM.GetByUUID(c.session, instance_uuid)
+	instance, err := c.GetClient().VM.GetByUUID(c.GetSessionRef(), instance_uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Could not get VM with UUID '%s': %s", instance_uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	if len(config.ExportNetworkNames) > 0 {
-		vifs, err := c.client.VM.GetVIFs(c.session, instance)
+		vifs, err := c.GetClient().VM.GetVIFs(c.GetSessionRef(), instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Error occured getting VIFs: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 
 		for _, vif := range vifs {
-			err := c.client.VIF.Destroy(c.session, vif)
+			err := c.GetClient().VIF.Destroy(c.GetSessionRef(), vif)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Destroy vif fail: '%s': %s", vif, err.Error()))
 				return multistep.ActionHalt
 			}
 		}
 		for i, networkNameLabel := range config.ExportNetworkNames {
-			networks, err := c.client.Network.GetByNameLabel(c.session, networkNameLabel)
+			networks, err := c.GetClient().Network.GetByNameLabel(c.GetSessionRef(), networkNameLabel)
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Error occured getting Network by name-label: %s", err.Error()))
@@ -129,7 +130,7 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 			//we need the VIF index string
 			vifIndexString := fmt.Sprintf("%d", i)
-			_, err = ConnectNetwork(c, networks[0], instance, vifIndexString)
+			_, err = xen.ConnectNetwork(c, networks[0], instance, vifIndexString)
 
 			if err != nil {
 				ui.Say(err.Error())
@@ -197,27 +198,27 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 	case "vdi_vhd":
 		// export the disks
 
-		disks, err := GetDisks(c, instance)
+		disks, err := xen.GetDisks(c, instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Could not get VM disks: %s", err.Error()))
 			return multistep.ActionHalt
 		}
 		for _, disk := range disks {
-			disk_uuid, err := c.client.VDI.GetUUID(c.session, disk)
+			disk_uuid, err := c.GetClient().VDI.GetUUID(c.GetSessionRef(), disk)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not get disk with UUID '%s': %s", disk_uuid, err.Error()))
 				return multistep.ActionHalt
 			}
 
 			// Work out XenServer version
-			hosts, err := c.client.Host.GetAll(c.session)
+			hosts, err := c.GetClient().Host.GetAll(c.GetSessionRef())
 
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not retrieve hosts in the pool: %s", err.Error()))
 				return multistep.ActionHalt
 			}
 			host := hosts[0]
-			host_software_versions, err := c.client.Host.GetSoftwareVersion(c.session, host)
+			host_software_versions, err := c.GetClient().Host.GetSoftwareVersion(c.GetSessionRef(), host)
 			xs_version := host_software_versions["product_version"]
 
 			if err != nil {
@@ -231,7 +232,7 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 			if xs_version <= "6.5.0" && config.Format == "vdi_vhd" {
 				// Export the VHD using a Transfer VM
 
-				disk_export_url, err = Expose(c, disk, "vhd")
+				disk_export_url, err = xen.Expose(c, disk, "vhd")
 
 				if err != nil {
 					ui.Error(fmt.Sprintf("Failed to expose disk %s: %s", disk_uuid, err.Error()))
@@ -264,7 +265,7 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 
 			// Call unexpose in case a TVM was used. The call is harmless
 			// if that is not the case.
-			Unexpose(c, disk)
+			xen.Unexpose(c, disk)
 
 		}
 

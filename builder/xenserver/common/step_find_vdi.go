@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -16,14 +17,14 @@ type StepFindVdi struct {
 
 func (self *StepFindVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*Connection)
+	c := state.Get("client").(*xen.Connection)
 
 	// Ignore if VdiName is not specified
 	if self.VdiName == "" {
 		return multistep.ActionContinue
 	}
 
-	vdis, err := c.client.VDI.GetByNameLabel(c.session, self.VdiName)
+	vdis, err := c.GetClient().VDI.GetByNameLabel(c.GetSessionRef(), self.VdiName)
 
 	switch {
 	case len(vdis) == 0:
@@ -36,7 +37,7 @@ func (self *StepFindVdi) Run(ctx context.Context, state multistep.StateBag) mult
 
 	vdi := vdis[0]
 
-	vdiUuid, err := c.client.VDI.GetUUID(c.session, vdi)
+	vdiUuid, err := c.GetClient().VDI.GetUUID(c.GetSessionRef(), vdi)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get UUID of VDI '%s': %s", self.VdiName, err.Error()))
 		return multistep.ActionHalt

@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"net"
 	"strconv"
 )
@@ -16,7 +17,7 @@ type StepGetVNCPort struct {
 
 func (self *StepGetVNCPort) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	xenClient := state.Get("client").(*Connection)
+	xenClient := state.Get("client").(*xen.Connection)
 	xenProxy := state.Get("xen_proxy").(proxy.XenProxy)
 	config := state.Get("commonconfig").(CommonConfig)
 

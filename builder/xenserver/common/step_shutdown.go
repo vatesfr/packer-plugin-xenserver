@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"time"
 
@@ -16,10 +17,10 @@ type StepShutdown struct{}
 func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*Connection)
+	c := state.Get("client").(*xen.Connection)
 	instance_uuid := state.Get("instance_uuid").(string)
 
-	instance, err := c.client.VM.GetByUUID(c.session, instance_uuid)
+	instance, err := c.GetClient().VM.GetByUUID(c.GetSessionRef(), instance_uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Could not get VM with UUID '%s': %s", instance_uuid, err.Error()))
 		return multistep.ActionHalt
@@ -45,7 +46,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 
 			err = InterruptibleWait{
 				Predicate: func() (bool, error) {
-					power_state, err := c.client.VM.GetPowerState(c.session, instance)
+					power_state, err := c.GetClient().VM.GetPowerState(c.GetSessionRef(), instance)
 					return power_state == xenapi.VMPowerStateHalted, err
 				},
 				PredicateInterval: 5 * time.Second,
@@ -60,7 +61,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 		} else {
 			ui.Message("Attempting to cleanly shutdown the VM...")
 
-			err = c.client.VM.CleanShutdown(c.session, instance)
+			err = c.GetClient().VM.CleanShutdown(c.GetSessionRef(), instance)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not shut down VM: %s", err.Error()))
 				return false
@@ -72,7 +73,7 @@ func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep
 
 	if !success {
 		ui.Say("WARNING: Forcing hard shutdown of the VM...")
-		err = c.client.VM.HardShutdown(c.session, instance)
+		err = c.GetClient().VM.HardShutdown(c.GetSessionRef(), instance)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Could not hard shut down VM -- giving up: %s", err.Error()))
 			return multistep.ActionHalt

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/shutdowncommand"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xenapi "github.com/terra-farm/go-xen-api-client"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 )
 
 type CommonConfig struct {
@@ -153,16 +154,16 @@ func (c CommonConfig) ShouldKeepVM(state multistep.StateBag) bool {
 	}
 }
 
-func (config CommonConfig) GetSR(c *Connection) (xenapi.SRRef, error) {
+func (config CommonConfig) GetSR(c *xen.Connection) (xenapi.SRRef, error) {
 	var srRef xenapi.SRRef
 	if config.SrName == "" {
-		hostRef, err := c.GetClient().Session.GetThisHost(c.session, c.session)
+		hostRef, err := c.GetClient().Session.GetThisHost(c.GetSessionRef(), c.GetSessionRef())
 
 		if err != nil {
 			return srRef, err
 		}
 
-		pools, err := c.GetClient().Pool.GetAllRecords(c.session)
+		pools, err := c.GetClient().Pool.GetAllRecords(c.GetSessionRef())
 
 		if err != nil {
 			return srRef, err
@@ -178,7 +179,7 @@ func (config CommonConfig) GetSR(c *Connection) (xenapi.SRRef, error) {
 
 	} else {
 		// Use the provided name label to find the SR to use
-		srs, err := c.GetClient().SR.GetByNameLabel(c.session, config.SrName)
+		srs, err := c.GetClient().SR.GetByNameLabel(c.GetSessionRef(), config.SrName)
 
 		if err != nil {
 			return srRef, err
@@ -195,14 +196,14 @@ func (config CommonConfig) GetSR(c *Connection) (xenapi.SRRef, error) {
 	}
 }
 
-func (config CommonConfig) GetISOSR(c *Connection) (xenapi.SRRef, error) {
+func (config CommonConfig) GetISOSR(c *xen.Connection) (xenapi.SRRef, error) {
 	var srRef xenapi.SRRef
 	if config.SrISOName == "" {
 		return srRef, errors.New("sr_iso_name must be specified in the packer configuration")
 
 	} else {
 		// Use the provided name label to find the SR to use
-		srs, err := c.GetClient().SR.GetByNameLabel(c.session, config.SrName)
+		srs, err := c.GetClient().SR.GetByNameLabel(c.GetSessionRef(), config.SrName)
 
 		if err != nil {
 			return srRef, err

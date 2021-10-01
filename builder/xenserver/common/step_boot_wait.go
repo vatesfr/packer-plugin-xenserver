@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -11,13 +12,13 @@ import (
 type StepBootWait struct{}
 
 func (self *StepBootWait) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	c := state.Get("client").(*Connection)
+	c := state.Get("client").(*xen.Connection)
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
-	instance, _ := c.client.VM.GetByUUID(c.session, state.Get("instance_uuid").(string))
+	instance, _ := c.GetClient().VM.GetByUUID(c.GetSessionRef(), state.Get("instance_uuid").(string))
 	ui.Say("Unpausing VM " + state.Get("instance_uuid").(string))
-	Unpause(c, instance)
+	xen.Unpause(c, instance)
 
 	if int64(config.BootWait) > 0 {
 		ui.Say(fmt.Sprintf("Waiting %s for boot...", config.BootWait))

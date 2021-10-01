@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"time"
 
@@ -24,19 +25,19 @@ type StepStartOnHIMN struct{}
 func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction {
 
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*Connection)
+	c := state.Get("client").(*xen.Connection)
 
 	ui.Say("Step: Start VM on the Host Internal Mangement Network")
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := c.client.VM.GetByUUID(c.session, uuid)
+	instance, err := c.GetClient().VM.GetByUUID(c.GetSessionRef(), uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
 	}
 
 	// Find the HIMN Ref
-	networks, err := c.client.Network.GetByNameLabel(c.session, "Host internal management network")
+	networks, err := c.GetClient().Network.GetByNameLabel(c.GetSessionRef(), "Host internal management network")
 	if err != nil || len(networks) == 0 {
 		ui.Error("Unable to find a host internal management network")
 		ui.Error(err.Error())
@@ -46,7 +47,7 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	himn := networks[0]
 
 	// Create a VIF for the HIMN
-	himn_vif, err := ConnectNetwork(c, himn, instance, "0")
+	himn_vif, err := xen.ConnectNetwork(c, himn, instance, "0")
 	if err != nil {
 		ui.Error("Error creating VIF")
 		ui.Error(err.Error())
@@ -54,14 +55,14 @@ func (self *StepStartOnHIMN) Run(state multistep.StateBag) multistep.StepAction 
 	}
 
 	// Start the VM
-	c.client.VM.Start(c.session, instance, false, false)
+	c.GetClient().VM.Start(c.GetSessionRef(), instance, false, false)
 
 	var himn_iface_ip string = ""
 
 	// Obtain the allocated IP
 	err = InterruptibleWait{
 		Predicate: func() (found bool, err error) {
-			ips, err := c.client.Network.GetAssignedIps(c.session, himn)
+			ips, err := c.GetClient().Network.GetAssignedIps(c.GetSessionRef(), himn)
 			if err != nil {
 				return false, fmt.Errorf("Can't get assigned IPs: %s", err.Error())
 			}

@@ -1,4 +1,4 @@
-package common
+package xen
 
 import (
 	"encoding/xml"

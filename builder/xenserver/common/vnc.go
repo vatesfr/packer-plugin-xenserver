@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/mitchellh/go-vnc"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"io"
 	"log"
 	"net"
@@ -16,10 +17,10 @@ import (
 )
 
 func GetVNCConsoleLocation(state multistep.StateBag) (string, error) {
-	xenClient := state.Get("client").(*Connection)
+	xenClient := state.Get("client").(*xen.Connection)
 	config := state.Get("commonconfig").(CommonConfig)
 
-	vmRef, err := xenClient.client.VM.GetByNameLabel(xenClient.session, config.VMName)
+	vmRef, err := xenClient.GetClient().VM.GetByNameLabel(xenClient.GetSessionRef(), config.VMName)
 
 	if err != nil {
 		return "", err
@@ -29,7 +30,7 @@ func GetVNCConsoleLocation(state multistep.StateBag) (string, error) {
 		return "", fmt.Errorf("expected to find a single VM, instead found '%d'. Ensure the VM name is unique", len(vmRef))
 	}
 
-	consoles, err := xenClient.client.VM.GetConsoles(xenClient.session, vmRef[0])
+	consoles, err := xenClient.GetClient().VM.GetConsoles(xenClient.GetSessionRef(), vmRef[0])
 
 	if err != nil {
 		return "", err
@@ -39,7 +40,7 @@ func GetVNCConsoleLocation(state multistep.StateBag) (string, error) {
 		return "", fmt.Errorf("expected to find a VM console, instead found '%d'. Ensure there is only one console", len(consoles))
 	}
 
-	location, err := xenClient.client.Console.GetLocation(xenClient.session, consoles[0])
+	location, err := xenClient.GetClient().Console.GetLocation(xenClient.GetSessionRef(), consoles[0])
 
 	if err != nil {
 		return "", err
@@ -49,7 +50,7 @@ func GetVNCConsoleLocation(state multistep.StateBag) (string, error) {
 }
 
 func CreateVNCConnection(state multistep.StateBag, location string) (net.Conn, error) {
-	xenClient := state.Get("client").(*Connection)
+	xenClient := state.Get("client").(*xen.Connection)
 	xenProxy := state.Get("xen_proxy").(proxy.XenProxy)
 
 	target, err := GetTcpAddressFromURL(location)

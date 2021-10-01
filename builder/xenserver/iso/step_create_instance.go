@@ -3,6 +3,7 @@ package iso
 import (
 	"context"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -19,7 +20,7 @@ type stepCreateInstance struct {
 
 func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
-	c := state.Get("client").(*xscommon.Connection)
+	c := state.Get("client").(*xen.Connection)
 	config := state.Get("config").(xscommon.Config)
 	ui := state.Get("ui").(packer.Ui)
 
@@ -136,7 +137,7 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 
 		self.vdis[i] = &vdi
 
-		err = xscommon.ConnectVdi(c, instance, vdi, xsclient.VbdTypeDisk)
+		err = xen.ConnectVdi(c, instance, vdi, xsclient.VbdTypeDisk)
 		if err != nil {
 			ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
 			return multistep.ActionHalt
@@ -177,7 +178,7 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 		}
 
 		log.Printf("Creating VIF on network '%s' on VM '%s'\n", network, instance)
-		_, err = xscommon.ConnectNetwork(c, network, instance, "0")
+		_, err = xen.ConnectNetwork(c, network, instance, "0")
 
 		if err != nil {
 			ui.Error(fmt.Sprintf("Failed to create VIF with error: %v", err))
@@ -206,7 +207,7 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 
 			//we need the VIF index string
 			vifIndexString := fmt.Sprintf("%d", i)
-			_, err = xscommon.ConnectNetwork(c, networks[0], instance, vifIndexString)
+			_, err = xen.ConnectNetwork(c, networks[0], instance, vifIndexString)
 
 			if err != nil {
 				ui.Say(fmt.Sprintf("Failed to connect VIF with error: %v", err.Error()))
@@ -233,7 +234,7 @@ func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
 	}
 
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*xscommon.Connection)
+	c := state.Get("client").(*xen.Connection)
 
 	if self.instance != nil {
 		ui.Say("Destroying VM")

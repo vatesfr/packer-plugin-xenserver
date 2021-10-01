@@ -3,6 +3,7 @@ package common
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"net/http"
 	"net/url"
@@ -27,14 +28,14 @@ func appendQuery(urlstring, k, v string) (string, error) {
 
 func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (result string, err error) {
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*Connection)
+	c := state.Get("client").(*xen.Connection)
 
-	task, err := c.client.Task.Create(c.session, "packer-task", "Packer task")
+	task, err := c.GetClient().Task.Create(c.GetSessionRef(), "packer-task", "Packer task")
 	if err != nil {
 		err = fmt.Errorf("Unable to create task: %s", err.Error())
 		return
 	}
-	defer c.client.Task.Destroy(c.session, task)
+	defer c.GetClient().Task.Destroy(c.GetSessionRef(), task)
 
 	import_task_url, err := appendQuery(import_url, "task_id", string(task))
 	if err != nil {
@@ -76,13 +77,13 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 	logIteration := 0
 	err = InterruptibleWait{
 		Predicate: func() (bool, error) {
-			status, err := c.client.Task.GetStatus(c.session, task)
+			status, err := c.GetClient().Task.GetStatus(c.GetSessionRef(), task)
 			if err != nil {
 				return false, fmt.Errorf("Failed to get task status: %s", err.Error())
 			}
 			switch status {
 			case xsclient.TaskStatusTypePending:
-				progress, err := c.client.Task.GetProgress(c.session, task)
+				progress, err := c.GetClient().Task.GetProgress(c.GetSessionRef(), task)
 				if err != nil {
 					return false, fmt.Errorf("Failed to get progress: %s", err.Error())
 				}
@@ -94,7 +95,7 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 			case xsclient.TaskStatusTypeSuccess:
 				return true, nil
 			case xsclient.TaskStatusTypeFailure:
-				errorInfo, err := c.client.Task.GetErrorInfo(c.session, task)
+				errorInfo, err := c.GetClient().Task.GetErrorInfo(c.GetSessionRef(), task)
 				if err != nil {
 					errorInfo = []string{fmt.Sprintf("furthermore, failed to get error info: %s", err.Error())}
 				}
@@ -116,7 +117,7 @@ func HTTPUpload(import_url string, fh *os.File, state multistep.StateBag) (resul
 		return
 	}
 
-	result, err = c.client.Task.GetResult(c.session, task)
+	result, err = c.GetClient().Task.GetResult(c.GetSessionRef(), task)
 	if err != nil {
 		err = fmt.Errorf("Error getting result: %s", err.Error())
 		return

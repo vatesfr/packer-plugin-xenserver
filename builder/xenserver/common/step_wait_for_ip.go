@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -17,7 +18,7 @@ type StepWaitForIP struct {
 
 func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*Connection)
+	c := state.Get("client").(*xen.Connection)
 	config := state.Get("commonconfig").(CommonConfig)
 
 	// Respect static configuration
@@ -29,7 +30,7 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 	ui.Say("Step: Wait for VM's IP to become known to us.")
 
 	uuid := state.Get("instance_uuid").(string)
-	instance, err := c.client.VM.GetByUUID(c.session, uuid)
+	instance, err := c.GetClient().VM.GetByUUID(c.GetSessionRef(), uuid)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM from UUID '%s': %s", uuid, err.Error()))
 		return multistep.ActionHalt
@@ -56,12 +57,12 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 			if config.IPGetter == "auto" || config.IPGetter == "tools" {
 
 				// Look for PV IP
-				m, err := c.client.VM.GetGuestMetrics(c.session, instance)
+				m, err := c.GetClient().VM.GetGuestMetrics(c.GetSessionRef(), instance)
 				if err != nil {
 					return false, err
 				}
 				if m != "" {
-					metrics, err := c.client.VMGuestMetrics.GetRecord(c.session, m)
+					metrics, err := c.GetClient().VMGuestMetrics.GetRecord(c.GetSessionRef(), m)
 					if err != nil {
 						return false, err
 					}

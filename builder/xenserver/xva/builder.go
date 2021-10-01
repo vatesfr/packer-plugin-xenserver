@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -89,7 +90,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
 	//Setup XAPI client
-	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.HostPort, self.config.Username, self.config.Password)
+	c, err := xen.NewXenAPIClient(self.config.HostIp, self.config.HostPort, self.config.Username, self.config.Password)
 
 	if err != nil {
 		return nil, err
