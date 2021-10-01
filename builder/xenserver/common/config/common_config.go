@@ -20,11 +20,7 @@ type CommonConfig struct {
 	bootcommand.VNCConfig  `mapstructure:",squash"`
 	commonsteps.HTTPConfig `mapstructure:",squash"`
 
-	Username    string `mapstructure:"remote_username"`
-	Password    string `mapstructure:"remote_password"`
-	HostIp      string `mapstructure:"remote_host"`
-	HostPort    int    `mapstructure:"remote_port"`
-	HostSSHPort int    `mapstructure:"remote_ssh_port"`
+	XenConfig `mapstructure:",squash"`
 
 	VMName             string   `mapstructure:"vm_name"`
 	VMDescription      string   `mapstructure:"vm_description"`
@@ -34,10 +30,7 @@ type CommonConfig struct {
 	NetworkNames       []string `mapstructure:"network_names"`
 	ExportNetworkNames []string `mapstructure:"export_network_names"`
 
-	VCPUsMax       uint              `mapstructure:"vcpus_max"`
-	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`
-	VMMemory       uint              `mapstructure:"vm_memory"`
-	PlatformArgs   map[string]string `mapstructure:"platform_args"`
+	PlatformArgs map[string]string `mapstructure:"platform_args"`
 
 	shutdowncommand.ShutdownConfig `mapstructure:",squash"`
 
@@ -51,6 +44,7 @@ type CommonConfig struct {
 	IPGetter  string `mapstructure:"ip_getter"`
 
 	Firmware string `mapstructure:"firmware"`
+	HardwareConfig
 
 	ctx interpolate.Context
 }
@@ -79,32 +73,8 @@ func (c *CommonConfig) Prepare(upper interface{}, raws ...interface{}) ([]string
 
 	// Set default values
 
-	if c.VCPUsMax == 0 {
-		c.VCPUsMax = 1
-	}
-
-	if c.VCPUsAtStartup == 0 {
-		c.VCPUsAtStartup = 1
-	}
-
-	if c.VCPUsAtStartup > c.VCPUsMax {
-		c.VCPUsAtStartup = c.VCPUsMax
-	}
-
-	if c.VMMemory == 0 {
-		c.VMMemory = 1024
-	}
-
 	if c.Firmware == "" {
 		c.Firmware = "bios"
-	}
-
-	if c.HostPort == 0 {
-		c.HostPort = 443
-	}
-
-	if c.HostSSHPort == 0 {
-		c.HostSSHPort = 22
 	}
 
 	if c.ToolsIsoName == "" {
@@ -156,18 +126,6 @@ func (c *CommonConfig) Prepare(upper interface{}, raws ...interface{}) ([]string
 
 	// Validation
 
-	if c.Username == "" {
-		errs = packersdk.MultiErrorAppend(errs, errors.New("remote_username must be specified."))
-	}
-
-	if c.Password == "" {
-		errs = packersdk.MultiErrorAppend(errs, errors.New("remote_password must be specified."))
-	}
-
-	if c.HostIp == "" {
-		errs = packersdk.MultiErrorAppend(errs, errors.New("remote_host must be specified."))
-	}
-
 	if c.HTTPPortMin > c.HTTPPortMax {
 		errs = packersdk.MultiErrorAppend(errs, errors.New("the HTTP min port must be less than the max"))
 	}
@@ -190,9 +148,17 @@ func (c *CommonConfig) Prepare(upper interface{}, raws ...interface{}) ([]string
 		errs = packersdk.MultiErrorAppend(errs, errors.New("ip_getter must be one of 'auto', 'tools', 'http'"))
 	}
 
-	commConfigWarnings, es := c.CommConfig.Prepare(&c.ctx)
+	innerWarnings, es := c.CommConfig.Prepare(&c.ctx)
 	errs = packersdk.MultiErrorAppend(errs, es...)
-	warnings = append(warnings, commConfigWarnings...)
+	warnings = append(warnings, innerWarnings...)
+
+	innerWarnings, es = c.XenConfig.Prepare(&c.ctx)
+	errs = packersdk.MultiErrorAppend(errs, es...)
+	warnings = append(warnings, innerWarnings...)
+
+	innerWarnings, es = c.HardwareConfig.Prepare(&c.ctx)
+	errs = packersdk.MultiErrorAppend(errs, es...)
+	warnings = append(warnings, innerWarnings...)
 
 	errs = packersdk.MultiErrorAppend(errs, c.VNCConfig.Prepare(&c.ctx)...)
 	errs = packersdk.MultiErrorAppend(errs, c.HTTPConfig.Prepare(&c.ctx)...)
