@@ -3,6 +3,7 @@ package iso
 import (
 	"context"
 	"fmt"
+	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 
@@ -10,7 +11,6 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 	xsclient "github.com/terra-farm/go-xen-api-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type stepCreateInstance struct {

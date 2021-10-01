@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
 	"golang.org/x/crypto/ssh"
 	"log"
@@ -44,12 +45,12 @@ func ExecuteSSHCmd(host string, port int, username, password, cmd string) (stdou
 }
 
 func ExecuteApiHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	return ExecuteSSHCmd(config.HostIp, config.HostSSHPort, config.Username, config.Password, cmd)
 }
 
 func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err error) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	xenProxy := state.Get("xen_proxy").(proxy.XenProxy)
 
 	host := state.Get("vm_host_address").(string)

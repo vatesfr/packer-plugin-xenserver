@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 
@@ -11,7 +12,7 @@ import (
 type VmCleanup struct{}
 
 func (self *VmCleanup) Cleanup(state multistep.StateBag) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	c := state.Get("client").(*xen.Connection)
 
 	if config.ShouldKeepVM(state) {

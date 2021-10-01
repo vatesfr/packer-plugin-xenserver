@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"io"
 	"net"
@@ -84,7 +85,7 @@ func downloadFile(url, filename string, ui packer.Ui) (err error) {
 }
 
 func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*xen.Connection)
 	instance_uuid := state.Get("instance_uuid").(string)

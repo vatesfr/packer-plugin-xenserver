@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -17,7 +18,7 @@ func (self *StepStartVmPaused) Run(ctx context.Context, state multistep.StateBag
 
 	c := state.Get("client").(*xen.Connection)
 	ui := state.Get("ui").(packer.Ui)
-	config := state.Get("config").(Config)
+	config := state.Get("config").(config2.Config)
 
 	ui.Say("Step: Start VM Paused")
 

@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
 	"golang.org/x/crypto/ssh"
 	"log"
@@ -17,7 +18,7 @@ type StepCreateProxy struct {
 }
 
 func (self *StepCreateProxy) Run(_ context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
 	var err error

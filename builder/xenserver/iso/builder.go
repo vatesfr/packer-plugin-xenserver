@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"path"
 	"strings"
@@ -21,7 +22,7 @@ import (
 )
 
 type Builder struct {
-	config xscommon.Config
+	config config2.Config
 	runner multistep.Runner
 }
 

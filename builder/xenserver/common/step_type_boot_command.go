@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"log"
 )
 
@@ -25,7 +26,7 @@ type StepTypeBootCommand struct {
 }
 
 func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	httpPort := state.Get("http_port").(int)
 

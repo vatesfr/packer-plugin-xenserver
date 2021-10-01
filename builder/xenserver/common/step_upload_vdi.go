@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"net"
@@ -22,7 +23,7 @@ type StepUploadVdi struct {
 }
 
 func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*xen.Connection)
 
@@ -100,7 +101,7 @@ func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) mu
 }
 
 func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*xen.Connection)
 

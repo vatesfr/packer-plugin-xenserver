@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -13,7 +14,7 @@ type StepBootWait struct{}
 
 func (self *StepBootWait) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	c := state.Get("client").(*xen.Connection)
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
 	instance, _ := c.GetClient().VM.GetByUUID(c.GetSessionRef(), state.Get("instance_uuid").(string))

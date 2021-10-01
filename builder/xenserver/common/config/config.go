@@ -1,5 +1,5 @@
 //go:generate packer-sdc mapstructure-to-hcl2 -type Config
-package common
+package config
 
 import (
 	"time"

@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"time"
@@ -134,6 +135,6 @@ func HimnSSHIP(state multistep.StateBag) (string, error) {
 }
 
 func HimnSSHPort(state multistep.StateBag) (int, error) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	return config.Comm.SSHPort, nil
 }

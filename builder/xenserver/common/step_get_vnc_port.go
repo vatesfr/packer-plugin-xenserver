@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"net"
@@ -19,7 +20,7 @@ func (self *StepGetVNCPort) Run(ctx context.Context, state multistep.StateBag) m
 	ui := state.Get("ui").(packer.Ui)
 	xenClient := state.Get("client").(*xen.Connection)
 	xenProxy := state.Get("xen_proxy").(proxy.XenProxy)
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 
 	if config.VNCConfig.DisableVNC {
 		return multistep.ActionContinue

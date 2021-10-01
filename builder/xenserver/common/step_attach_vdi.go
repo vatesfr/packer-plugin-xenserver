@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 
@@ -57,7 +58,7 @@ func (self *StepAttachVdi) Run(ctx context.Context, state multistep.StateBag) mu
 }
 
 func (self *StepAttachVdi) Cleanup(state multistep.StateBag) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	c := state.Get("client").(*xen.Connection)
 	if config.ShouldKeepVM(state) {
 		return

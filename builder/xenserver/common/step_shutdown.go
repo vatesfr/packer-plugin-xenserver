@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"log"
 	"time"
@@ -15,7 +16,7 @@ import (
 type StepShutdown struct{}
 
 func (StepShutdown) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*xen.Connection)
 	instance_uuid := state.Get("instance_uuid").(string)

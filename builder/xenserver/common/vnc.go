@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/mitchellh/go-vnc"
+	config2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/config"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/proxy"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
 	"io"
@@ -18,7 +19,7 @@ import (
 
 func GetVNCConsoleLocation(state multistep.StateBag) (string, error) {
 	xenClient := state.Get("client").(*xen.Connection)
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 
 	vmRef, err := xenClient.GetClient().VM.GetByNameLabel(xenClient.GetSessionRef(), config.VMName)
 
