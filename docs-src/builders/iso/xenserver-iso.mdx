@@ -24,7 +24,8 @@ portably.
 
 There are many configuration options available for the builder. In addition to
 the items listed here, you will want to look at the general configuration
-references for [HTTP](#http-directory-configuration),
+references for [ISO](#iso-configuration),
+[HTTP](#http-directory-configuration),
 [Floppy](#floppy-configuration),
 [Boot](#boot-configuration),
 [Shutdown](#shutdown-configuration),
@@ -32,14 +33,23 @@ references for [HTTP](#http-directory-configuration),
 configuration references, which are
 necessary for this build to succeed and can be found further down the page.
 
-### Required:
-@include 'builder/xenserver/iso/Config-required.mdx'
-
 ### Optional:
 
 @include 'builder/xenserver/iso/Config-not-required.mdx'
 @include 'builder/xenserver/common/config/CommonConfig-not-required.mdx'
 @include 'builder/xenserver/common/config/HardwareConfig-not-required.mdx'
+
+## ISO Configuration
+
+@include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig.mdx'
+
+### Required:
+
+@include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-required.mdx'
+
+### Optional:
+
+@include 'packer-plugin-sdk/multistep/commonsteps/ISOConfig-not-required.mdx'
 
 ## Http directory configuration
 
