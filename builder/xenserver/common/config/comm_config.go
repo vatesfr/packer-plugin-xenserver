@@ -1,3 +1,5 @@
+//go:generate packer-sdc struct-markdown
+
 package config
 
 import (
@@ -18,10 +20,16 @@ type CommConfig struct {
 
 	// These are deprecated, but we keep them around for backwards compatibility
 	// TODO: remove later
-	SSHKeyPath        string `mapstructure:"ssh_key_path"`
-	SSHSkipNatMapping bool   `mapstructure:"ssh_skip_nat_mapping"`
-	HostPortMin       int    `mapstructure:"host_port_min" required:"false"`
-	HostPortMax       int    `mapstructure:"host_port_max" required:"false"`
+
+	/*
+		Path to a private key to use for authenticating with SSH. By default this is not set (key-based auth won't be used).
+		The associated public key is expected to already be configured on the VM being prepared by some other process
+		(kickstart, etc.).
+	*/
+	SSHKeyPath        string `mapstructure:"ssh_key_path" undocumented:"true"`
+	SSHSkipNatMapping bool   `mapstructure:"ssh_skip_nat_mapping" undocumented:"true"`
+	HostPortMin       int    `mapstructure:"host_port_min" required:"false" undocumented:"true"`
+	HostPortMax       int    `mapstructure:"host_port_max" required:"false" undocumented:"true"`
 }
 
 func (c *CommConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs []error) {

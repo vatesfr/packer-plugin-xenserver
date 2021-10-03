@@ -56,7 +56,9 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Path:  self.config.OutputDir,
 		},
 		&commonsteps.StepCreateFloppy{
-			Files: self.config.FloppyFiles,
+			Files:       self.config.FloppyFiles,
+			Directories: self.config.FloppyDirectories,
+			Label:       self.config.FloppyLabel,
 		},
 		&steps2.StepUploadVdi{
 			VdiNameFunc: func() string {

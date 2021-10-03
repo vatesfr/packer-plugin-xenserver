@@ -6,11 +6,32 @@ import (
 )
 
 type XenConfig struct {
-	Username    string `mapstructure:"remote_username"`
-	Password    string `mapstructure:"remote_password"`
-	HostIp      string `mapstructure:"remote_host"`
-	HostPort    int    `mapstructure:"remote_port"`
-	HostSSHPort int    `mapstructure:"remote_ssh_port"`
+	/*
+		The XenServer username used to access the remote machine.
+	*/
+	Username string `mapstructure:"remote_username" required:"true"`
+
+	/*
+		The XenServer password for access to the remote machine.
+	*/
+	Password string `mapstructure:"remote_password" required:"true"`
+
+	/*
+		The host of the Xenserver / XCP-ng pool primary.
+		Typically these will be specified through environment variables as seen in the
+		[examples](../../examples/centos8.json).
+	*/
+	HostIp string `mapstructure:"remote_host" required:"true"`
+
+	/*
+		The port of the Xenserver API. Defaults to 443.
+	*/
+	HostPort int `mapstructure:"remote_port"`
+
+	/*
+		The ssh port of the Xenserver pool primary. Defaults to 22.
+	*/
+	HostSSHPort int `mapstructure:"remote_ssh_port"`
 }
 
 func (c *XenConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs []error) {

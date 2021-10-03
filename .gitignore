@@ -9,3 +9,6 @@ dist/*
 vendor/*
 packer-plugin-xenserver
 .idea
+
+docs-rendered
+docs-partials

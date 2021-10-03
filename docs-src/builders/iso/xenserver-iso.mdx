@@ -1,0 +1,94 @@
+---
+modeline: |
+vim: set ft=pandoc:
+description: |-
+  The XenServer Packer builder is able to create XenServer virtual machines and export them either as an XVA or a VDI and create VM templates starting from an ISO image.
+page_title: "XenServer Builder (from an ISO)"
+nav_title: "XenServer Builder (from an ISO)"
+---
+
+# XenServer Builder (from an ISO)
+
+Type: `xenserver-iso`
+
+The XenServer Packer builder is able to create [XenServer](https://www.xenserver.org/)
+virtual machines and export them either as an XVA or a VDI and create VM templates starting from an ISO image.
+
+The builder builds a virtual machine by creating a new virtual machine
+from scratch, booting it, installing an OS, provisioning software within
+the OS, then shutting it down. The result of the XenServer builder is a
+directory containing all the files necessary to run the virtual machine
+portably.
+
+## Configuration Reference
+
+There are many configuration options available for the builder. In addition to
+the items listed here, you will want to look at the general configuration
+references for [HTTP](#http-directory-configuration),
+[Floppy](#floppy-configuration),
+[Boot](#boot-configuration),
+[Shutdown](#shutdown-configuration),
+[Communicator](#communicator-configuration)
+configuration references, which are
+necessary for this build to succeed and can be found further down the page.
+
+### Required:
+@include 'builder/xenserver/iso/Config-required.mdx'
+
+### Optional:
+
+@include 'builder/xenserver/iso/Config-not-required.mdx'
+@include 'builder/xenserver/common/config/CommonConfig-not-required.mdx'
+@include 'builder/xenserver/common/config/HardwareConfig-not-required.mdx'
+
+## Http directory configuration
+
+@include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig.mdx'
+
+### Optional:
+
+@include 'packer-plugin-sdk/multistep/commonsteps/HTTPConfig-not-required.mdx'
+
+## Floppy configuration
+
+@include 'packer-plugin-sdk/multistep/commonsteps/FloppyConfig.mdx'
+
+### Optional:
+
+@include 'packer-plugin-sdk/multistep/commonsteps/FloppyConfig-not-required.mdx'
+
+## Shutdown configuration
+
+### Optional:
+
+@include 'packer-plugin-sdk/shutdowncommand/ShutdownConfig-not-required.mdx'
+
+## Communicator configuration
+
+### Optional common fields:
+
+@include 'packer-plugin-sdk/communicator/Config-not-required.mdx'
+
+@include 'builder/xenserver/common/config/CommConfig-not-required.mdx'
+
+### Optional SSH fields:
+
+@include 'packer-plugin-sdk/communicator/SSH-not-required.mdx'
+
+@include 'packer-plugin-sdk/communicator/SSH-Private-Key-File-not-required.mdx'
+
+### Optional WinRM fields:
+
+@include 'packer-plugin-sdk/communicator/WinRM-not-required.mdx'
+
+## Boot Configuration
+
+@include 'packer-plugin-sdk/bootcommand/VNCConfig.mdx'
+
+@include 'packer-plugin-sdk/bootcommand/BootConfig.mdx'
+
+### Optional:
+
+@include 'packer-plugin-sdk/bootcommand/VNCConfig-not-required.mdx'
+
+@include 'packer-plugin-sdk/bootcommand/BootConfig-not-required.mdx'

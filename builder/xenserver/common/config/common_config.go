@@ -1,3 +1,5 @@
+//go:generate packer-sdc struct-markdown
+
 package config
 
 import (
@@ -22,29 +24,81 @@ type CommonConfig struct {
 
 	XenConfig `mapstructure:",squash"`
 
-	VMName             string   `mapstructure:"vm_name"`
-	VMDescription      string   `mapstructure:"vm_description"`
-	SrName             string   `mapstructure:"sr_name"`
-	SrISOName          string   `mapstructure:"sr_iso_name"`
-	FloppyFiles        []string `mapstructure:"floppy_files"`
+	commonsteps.FloppyConfig `mapstructure:",squash"`
+
+	/*
+		This is the name of the new virtual machine, without the file extension.
+		By default this is "packer-BUILDNAME-TIMESTAMP", where "BUILDNAME" is the name of the build.
+	*/
+	VMName string `mapstructure:"vm_name"`
+
+	/*
+		The description of the new virtual machine. By default, this is the empty string.
+	*/
+	VMDescription string `mapstructure:"vm_description"`
+	SrName        string `mapstructure:"sr_name"`
+	SrISOName     string `mapstructure:"sr_iso_name"`
+
+	/*
+		A list of networks identified by their name label which will be used for the VM during creation.
+		The first network will correspond to the VM's first network interface (VIF),
+		the second will corespond to the second VIF and so on.
+	*/
 	NetworkNames       []string `mapstructure:"network_names"`
 	ExportNetworkNames []string `mapstructure:"export_network_names"`
 
+	/*
+		The platform args. Defaults to
+		```javascript
+		{
+		    "viridian": "false",
+		    "nx": "true",
+		    "pae": "true",
+		    "apic": "true",
+		    "timeoffset": "0",
+		    "acpi": "1",
+		    "cores-per-socket": "1"
+		}
+		```
+	*/
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 
 	shutdowncommand.ShutdownConfig `mapstructure:",squash"`
 
+	/*
+		The name of the XenServer Tools ISO. Defaults to "xs-tools.iso".
+	*/
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
 
-	CommConfig `mapstructure:",squash"`
+	CommConfig `mapstructure:",squash" `
 
+	/*
+		This is the path to the directory where the resulting virtual machine will be created.
+		This may be relative or absolute. If relative, the path is relative to the working directory when `packer`
+		is executed. This directory must not exist or be empty prior to running the builder.
+		By default this is "output-BUILDNAME" where "BUILDNAME" is the name of the build.
+	*/
 	OutputDir string `mapstructure:"output_directory"`
-	Format    string `mapstructure:"format"`
-	KeepVM    string `mapstructure:"keep_vm"`
-	IPGetter  string `mapstructure:"ip_getter"`
 
-	Firmware string `mapstructure:"firmware"`
-	HardwareConfig
+	/*
+		Either "xva", "vdi_raw" or "none", this specifies the output format of the exported virtual machine.
+		This defaults to "xva". Set to "vdi_raw" to export just the raw disk image. Set to "none" to export nothing;
+		this is only useful with "keep_vm" set to "always" or "on_success".
+	*/
+	Format string `mapstructure:"format"`
+
+	/*
+		Determine when to keep the VM and when to clean it up. This can be "always", "never" or "on_success".
+		By default this is "never", and Packer always deletes the VM regardless of whether the process succeeded
+		and an artifact was produced. "always" asks Packer to leave the VM at the end of the process regardless of success.
+		"on_success" requests that the VM only be cleaned up if an artifact was produced.
+		The latter is useful for debugging templates that fail.
+	*/
+	KeepVM   string `mapstructure:"keep_vm"`
+	IPGetter string `mapstructure:"ip_getter"`
+
+	Firmware       string `mapstructure:"firmware"`
+	HardwareConfig `mapstructure:",squash"`
 
 	ctx interpolate.Context
 }
@@ -79,18 +133,6 @@ func (c *CommonConfig) Prepare(upper interface{}, raws ...interface{}) ([]string
 
 	if c.ToolsIsoName == "" {
 		c.ToolsIsoName = "xs-tools.iso"
-	}
-
-	if c.HTTPPortMin == 0 {
-		c.HTTPPortMin = 8000
-	}
-
-	if c.HTTPPortMax == 0 {
-		c.HTTPPortMax = 9000
-	}
-
-	if c.FloppyFiles == nil {
-		c.FloppyFiles = make([]string, 0)
 	}
 
 	if c.OutputDir == "" {
@@ -163,6 +205,7 @@ func (c *CommonConfig) Prepare(upper interface{}, raws ...interface{}) ([]string
 	errs = packersdk.MultiErrorAppend(errs, c.VNCConfig.Prepare(&c.ctx)...)
 	errs = packersdk.MultiErrorAppend(errs, c.HTTPConfig.Prepare(&c.ctx)...)
 	errs = packersdk.MultiErrorAppend(errs, c.ShutdownConfig.Prepare(&c.ctx)...)
+	errs = packersdk.MultiErrorAppend(errs, c.FloppyConfig.Prepare(&c.ctx)...)
 
 	return nil, warnings, errs
 }
