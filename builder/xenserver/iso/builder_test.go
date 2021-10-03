@@ -1,6 +1,8 @@
 package iso
 
 import (
+	"crypto/md5"
+	"fmt"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"reflect"
 	"testing"
@@ -10,15 +12,14 @@ import (
 
 func testConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"remote_host":       "localhost",
-		"remote_username":   "admin",
-		"remote_password":   "admin",
-		"vm_name":           "foo",
-		"iso_checksum":      "foo",
-		"iso_checksum_type": "md5",
-		"iso_url":           "http://www.google.com/",
-		"shutdown_command":  "yes",
-		"ssh_username":      "foo",
+		"remote_host":      "localhost",
+		"remote_username":  "admin",
+		"remote_password":  "admin",
+		"vm_name":          "foo",
+		"iso_checksum":     "md5:d41d8cd98f00b204e9800998ecf8427e",
+		"iso_url":          "http://www.google.com/",
+		"shutdown_command": "yes",
+		"ssh_username":     "foo",
 
 		common.BuildNameConfigKey: "foo",
 	}
@@ -190,8 +191,20 @@ func TestBuilderPrepare_ISOChecksum(t *testing.T) {
 		t.Fatal("should have error")
 	}
 
+	// Test bad checksum
+	config["iso_checksum"] = "md5:FOo"
+	b = Builder{}
+	_, warns, err = b.Prepare(config)
+	if len(warns) > 0 {
+		t.Fatalf("bad: %#v", warns)
+	}
+	if err == nil {
+		t.Fatal("should have error")
+	}
+
 	// Test good
-	config["iso_checksum"] = "FOo"
+	checksum := md5.Sum([]byte("TEST"))
+	config["iso_checksum"] = "Md5:" + fmt.Sprintf("%X", checksum)
 	b = Builder{}
 	_, warns, err = b.Prepare(config)
 	if len(warns) > 0 {
@@ -201,67 +214,8 @@ func TestBuilderPrepare_ISOChecksum(t *testing.T) {
 		t.Fatalf("should not have error: %s", err)
 	}
 
-	if b.config.ISOChecksum != "foo" {
+	if b.config.ISOChecksum != "md5:"+fmt.Sprintf("%x", checksum) {
 		t.Fatalf("should've lowercased: %s", b.config.ISOChecksum)
-	}
-}
-
-func TestBuilderPrepare_ISOChecksumType(t *testing.T) {
-	var b Builder
-	config := testConfig()
-
-	// Test bad
-	config["iso_checksum_type"] = ""
-	_, warns, err := b.Prepare(config)
-	if len(warns) > 0 {
-		t.Fatalf("bad: %#v", warns)
-	}
-	if err == nil {
-		t.Fatal("should have error")
-	}
-
-	// Test good
-	config["iso_checksum_type"] = "mD5"
-	b = Builder{}
-	_, warns, err = b.Prepare(config)
-	if len(warns) > 0 {
-		t.Fatalf("bad: %#v", warns)
-	}
-	if err != nil {
-		t.Fatalf("should not have error: %s", err)
-	}
-
-	if b.config.ISOChecksumType != "md5" {
-		t.Fatalf("should've lowercased: %s", b.config.ISOChecksumType)
-	}
-
-	// Test unknown
-	config["iso_checksum_type"] = "fake"
-	b = Builder{}
-	_, warns, err = b.Prepare(config)
-	if len(warns) > 0 {
-		t.Fatalf("bad: %#v", warns)
-	}
-	if err == nil {
-		t.Fatal("should have error")
-	}
-
-	// Test none
-	config["iso_checksum_type"] = "none"
-	b = Builder{}
-	_, warns, err = b.Prepare(config)
-	// @todo: give warning in this case?
-	/*
-		if len(warns) == 0 {
-			t.Fatalf("bad: %#v", warns)
-		}
-	*/
-	if err != nil {
-		t.Fatalf("should not have error: %s", err)
-	}
-
-	if b.config.ISOChecksumType != "none" {
-		t.Fatalf("should've lowercased: %s", b.config.ISOChecksumType)
 	}
 }
 

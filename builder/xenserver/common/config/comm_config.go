@@ -26,10 +26,10 @@ type CommConfig struct {
 		The associated public key is expected to already be configured on the VM being prepared by some other process
 		(kickstart, etc.).
 	*/
-	SSHKeyPath        string `mapstructure:"ssh_key_path" undocumented:"true"`
-	SSHSkipNatMapping bool   `mapstructure:"ssh_skip_nat_mapping" undocumented:"true"`
-	HostPortMin       int    `mapstructure:"host_port_min" required:"false" undocumented:"true"`
-	HostPortMax       int    `mapstructure:"host_port_max" required:"false" undocumented:"true"`
+	DeprecatedSSHKeyPath        string `mapstructure:"ssh_key_path" undocumented:"true"`
+	DeprecatedSSHSkipNatMapping bool   `mapstructure:"ssh_skip_nat_mapping" undocumented:"true"`
+	DeprecatedHostPortMin       int    `mapstructure:"host_port_min" required:"false" undocumented:"true"`
+	DeprecatedHostPortMax       int    `mapstructure:"host_port_max" required:"false" undocumented:"true"`
 }
 
 func (c *CommConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs []error) {
@@ -39,28 +39,28 @@ func (c *CommConfig) Prepare(ctx *interpolate.Context) (warnings []string, errs 
 		"In future versions of Packer, inclusion of %s will error your builds."
 
 	// Backwards compatibility
-	if c.HostPortMin != 0 {
+	if c.DeprecatedHostPortMin != 0 {
 		warnings = append(warnings, fmt.Sprintf(removedHostPortFmt, "host_port_min", "host_port_min", "host_port_min"))
 	}
 
 	// Backwards compatibility
-	if c.HostPortMax != 0 {
+	if c.DeprecatedHostPortMax != 0 {
 		warnings = append(warnings, fmt.Sprintf(removedHostPortFmt, "host_port_max", "host_port_max", "host_port_max"))
 	}
 
 	// Backwards compatibility
-	if c.SSHKeyPath != "" {
+	if c.DeprecatedSSHKeyPath != "" {
 		warnings = append(warnings, "ssh_key_path is deprecated and is being replaced by ssh_private_key_file. "+
 			"Please, update your template to use ssh_private_key_file. In future versions of Packer, inclusion of ssh_key_path will error your builds.")
-		c.Comm.SSHPrivateKeyFile = c.SSHKeyPath
+		c.Comm.SSHPrivateKeyFile = c.DeprecatedSSHKeyPath
 	}
 
 	// Backwards compatibility
-	if c.SSHSkipNatMapping {
+	if c.DeprecatedSSHSkipNatMapping {
 		warnings = append(warnings, "ssh_skip_nat_mapping is deprecated and is being replaced by skip_nat_mapping. "+
 			"Please, update your template to use skip_nat_mapping. In future versions of Packer, inclusion of ssh_skip_nat_mapping will error your builds.")
 
-		c.SkipNatMapping = c.SSHSkipNatMapping
+		c.SkipNatMapping = c.DeprecatedSSHSkipNatMapping
 	}
 
 	if c.Comm.SSHHost == "" && c.SkipNatMapping {
