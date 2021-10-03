@@ -5,7 +5,11 @@ import (
 	"errors"
 	artifact2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/artifact"
 	steps2 "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/steps"
+	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/workaround"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/common/xen"
+	"log"
+	"net"
+	"net/http"
 	"path"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -46,6 +50,21 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 	state.Put("ui", ui)
 
 	httpReqChan := make(chan string, 1)
+
+	httpServerStep := workaround.HTTPServerFromHTTPConfig(&self.config.HTTPConfig)
+	httpServerStep.AddCallback(func(req *http.Request) {
+		log.Printf("HTTP: %s %s %s", req.RemoteAddr, req.Method, req.URL)
+		ip, _, err := net.SplitHostPort(req.RemoteAddr)
+
+		if err == nil && ip != "" {
+			select {
+			case httpReqChan <- ip:
+				log.Printf("Remembering remote address '%s'", ip)
+			default:
+				// if ch is already full, don't block waiting to send the address, just drop it
+			}
+		}
+	})
 
 	//Build the steps
 	download_steps := []multistep.Step{
@@ -123,7 +142,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		new(steps2.StepSetVmHostSshAddress),
 		new(steps2.StepHTTPIPDiscover),
 		&steps2.StepCreateProxy{},
-		commonsteps.HTTPServerFromHTTPConfig(&self.config.HTTPConfig),
+		httpServerStep,
 		new(steps2.StepBootWait),
 		&steps2.StepTypeBootCommand{
 			Ctx: *self.config.GetInterpContext(),

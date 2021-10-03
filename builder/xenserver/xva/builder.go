@@ -42,7 +42,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 	//Share state between the other steps using a statebag
 	state := new(multistep.BasicStateBag)
 	state.Put("client", c)
-	// state.Put("config", self.config)
+	state.Put("config", self.config)
 	state.Put("commonconfig", self.config.CommonConfig)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
