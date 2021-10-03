@@ -17,8 +17,7 @@ generate:
 	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
 	@go generate -v ./...
 
-ci-release-docs:
-	@go install github.com/hashicorp/packer-plugin-sdk/cmd/packer-sdc@latest
+ci-release-docs: generate
 	@packer-sdc renderdocs -src docs-src -partials docs-partials/ -dst docs/
 	@/bin/sh -c "[ -d docs ] && zip -r docs.zip docs/"
 
