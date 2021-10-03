@@ -18,7 +18,7 @@ func (self *StepStartVmPaused) Run(ctx context.Context, state multistep.StateBag
 
 	c := state.Get("client").(*xen.Connection)
 	ui := state.Get("ui").(packer.Ui)
-	config := state.Get("config").(config2.CommonConfig)
+	config := state.Get("commonconfig").(config2.CommonConfig)
 
 	ui.Say("Step: Start VM Paused")
 
