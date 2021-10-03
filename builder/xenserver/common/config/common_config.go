@@ -171,8 +171,9 @@ func (c *CommonConfig) Prepare(upper interface{}, raws ...interface{}) ([]string
 
 	// Validation
 
-	if c.HTTPPortMin > c.HTTPPortMax {
-		errs = packersdk.MultiErrorAppend(errs, errors.New("the HTTP min port must be less than the max"))
+	// Lower bound is not checked in commonsteps.HTTPConfig
+	if c.HTTPPortMin < 0 {
+		errs = packersdk.MultiErrorAppend(errs, errors.New("the HTTP min port must greater than zero"))
 	}
 
 	switch c.Format {

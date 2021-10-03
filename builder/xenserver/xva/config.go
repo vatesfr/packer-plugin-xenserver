@@ -17,7 +17,7 @@ type Config struct {
 
 func (c *Config) Prepare(raws ...interface{}) ([]string, []string, error) {
 	var errs *packersdk.MultiError
-	params, warnings, merrs := c.CommonConfig.Prepare(c, raws)
+	params, warnings, merrs := c.CommonConfig.Prepare(c, raws...)
 	if merrs != nil {
 		errs = packersdk.MultiErrorAppend(errs, merrs)
 	}
