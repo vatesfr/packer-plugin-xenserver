@@ -97,6 +97,9 @@ type CommonConfig struct {
 	KeepVM   string `mapstructure:"keep_vm"`
 	IPGetter string `mapstructure:"ip_getter"`
 
+	/*
+		Set the firmware to use. Can be "bios" or "uefi".
+	*/
 	Firmware       string `mapstructure:"firmware"`
 	HardwareConfig `mapstructure:",squash"`
 
