@@ -16,7 +16,6 @@ func (self *StepStartVmPaused) Run(ctx context.Context, state multistep.StateBag
 
 	c := state.Get("client").(*Connection)
 	ui := state.Get("ui").(packer.Ui)
-	config := state.Get("config").(Config)
 
 	ui.Say("Step: Start VM Paused")
 
@@ -35,7 +34,7 @@ func (self *StepStartVmPaused) Run(ctx context.Context, state multistep.StateBag
 		return multistep.ActionHalt
 	}
 
-	err = c.client.VM.SetHVMBootParams(c.session, instance, map[string]string{"order": "cd", "firmware": config.Firmware})
+	err = c.client.VM.SetHVMBootParams(c.session, instance, map[string]string{"order": "cd"})
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to set HVM boot params: %s", err.Error()))
 		return multistep.ActionHalt
