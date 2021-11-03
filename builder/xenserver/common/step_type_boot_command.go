@@ -1,8 +1,7 @@
 package common
 
-/* Heavily borrowed from builder/quemu/step_type_boot_command.go */
-
 import (
+	"bufio"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -11,10 +10,10 @@ import (
 	"net"
 	"strings"
 
+	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
-	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	"github.com/mitchellh/go-vnc"
 )
 
@@ -103,36 +102,41 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		return multistep.ActionHalt
 	}
 
-        // Look for \r\n\r\n sequence. Everything after the HTTP Header is for the vnc client.
-        
-	builder := strings.Builder{}
-	buffer := make([]byte, 1)
-	sequenceProgress := 0
-
+	// Look for \r\n\r\n sequence. Everything after the HTTP Header is for the vnc client.
+	reader := bufio.NewReader(tlsConn)
+	var httpResp string
 	for {
-		if _, err := io.ReadFull(tlsConn, buffer); err != nil {
+		httpResp, err = reader.ReadString('\r')
+		if err != nil {
 			err := fmt.Errorf("failed to start vnc session: %v", err)
 			state.Put("error", err)
 			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
 
-		builder.WriteByte(buffer[0])
-
-		if buffer[0] == '\n' && sequenceProgress % 2 == 1 {
-			sequenceProgress++
-		} else if buffer[0] == '\r' && sequenceProgress % 2 == 0 {
-			sequenceProgress++
-		} else {
-			sequenceProgress = 0
+		// Peek at the next three bytes to see if it contains the remaining \n\r\n
+		var b []byte
+		b, err = reader.Peek(3)
+		if err != nil {
+			e := fmt.Errorf("failed to start vnc session: %v", err)
+			state.Put("error", e)
+			ui.Error(e.Error())
+			return multistep.ActionHalt
 		}
 
-		if sequenceProgress == 4 {
+		if b[0] == '\n' && b[1] == '\r' && b[2] == '\n' {
+			if _, err = reader.Discard(3); err != nil {
+				e := fmt.Errorf("failed to start vnc session: %v", err)
+				state.Put("error", e)
+				ui.Error(e.Error())
+				return multistep.ActionHalt
+			}
+
 			break
 		}
 	}
-        
-	ui.Say(fmt.Sprintf("Received response: %s", builder.String()))
+
+	ui.Say(fmt.Sprintf("Received response: %s", httpResp))
 
 	vncClient, err := vnc.Client(tlsConn, &vnc.ClientConfig{Exclusive: false})
 
@@ -144,7 +148,6 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	}
 
 	defer vncClient.Close()
-	
 
 	log.Printf("Connected to the VNC console: %s", vncClient.DesktopName)
 
@@ -170,32 +173,31 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	vncDriver := bootcommand.NewVNCDriver(vncClient, config.VNCConfig.BootKeyInterval)
 
 	ui.Say("Typing boot commands over VNC...")
-	
+
 	command, err := interpolate.Render(config.VNCConfig.FlatBootCommand(), &self.Ctx)
-	
+
 	if err != nil {
 		err := fmt.Errorf("Error preparing boot command: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-	
+
 	seq, err := bootcommand.GenerateExpressionSequence(command)
-	
+
 	if err != nil {
 		err := fmt.Errorf("Error generating boot command: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-	
+
 	if err := seq.Do(ctx, vncDriver); err != nil {
 		err := fmt.Errorf("Error running boot command: %s", err)
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
-	
 
 	ui.Say("Finished typing.")
 
