@@ -3,7 +3,6 @@ package xva
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -74,8 +73,12 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 	// Validation
 
-	if self.config.SourcePath == "" {
-		errs = packer.MultiErrorAppend(errs, fmt.Errorf("A source_path must be specified"))
+	if self.config.SourcePath == "" && self.config.CloneTemplate == "" {
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("Either source_path or clone_template must be specified"))
+	} else if self.config.SourcePath != "" && self.config.CloneTemplate != "" {
+		errs = packer.MultiErrorAppend(
+			errs, errors.New("Only one of source_path and clone_template must be specified"))
 	}
 
 	if len(errs.Errors) > 0 {
@@ -134,6 +137,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			VdiName:    self.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
+		new(stepCreateFromTemplate),
 		new(stepImportInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
