@@ -42,6 +42,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 	errs = packer.MultiErrorAppend(
 		errs, self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
+	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(self.config.GetInterpContext())...)
 
 	// Set default values
 	if self.config.VCPUsMax == 0 {
@@ -104,7 +105,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 	//Share state between the other steps using a statebag
 	state := new(multistep.BasicStateBag)
 	state.Put("client", c)
-	// state.Put("config", self.config)
+	state.Put("config", self.config)
 	state.Put("commonconfig", self.config.CommonConfig)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
@@ -119,8 +120,11 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
+			Label: "cidata",
 		},
-		new(xscommon.StepHTTPServer),
+		&xscommon.StepHTTPServer{
+			Chan: httpReqChan,
+		},
 		&xscommon.StepUploadVdi{
 			VdiNameFunc: func() string {
 				return "Packer-floppy-disk"
@@ -157,19 +161,27 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Chan:    httpReqChan,
 			Timeout: 300 * time.Minute, /*self.config.InstallTimeout*/ // @todo change this
 		},
+		&xscommon.StepForwardPortOverSSH{
+			RemotePort:  xscommon.InstanceSSHPort,
+			RemoteDest:  xscommon.InstanceSSHIP,
+			HostPortMin: self.config.HostPortMin,
+			HostPortMax: self.config.HostPortMax,
+			ResultKey:   "local_ssh_port",
+		},
 		&communicator.StepConnect{
 			Config:    &self.config.SSHConfig.Comm,
-			Host:      xscommon.CommHost,
-			SSHConfig: xscommon.SSHConfigFunc(self.config.CommonConfig.SSHConfig),
-			SSHPort:   xscommon.SSHPort,
+			Host:      xscommon.InstanceSSHIP,
+			SSHConfig: self.config.Comm.SSHConfigFunc(),
+			SSHPort:   xscommon.InstanceSSHPort,
 		},
 		new(commonsteps.StepProvision),
 		new(xscommon.StepShutdown),
-		&xscommon.StepDetachVdi{
-			VdiUuidKey: "floppy_vdi_uuid",
-		},
+		new(xscommon.StepSetVmToTemplate),
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "floppy_vdi_uuid",
 		},
 		new(xscommon.StepExport),
 	}
