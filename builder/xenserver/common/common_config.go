@@ -24,6 +24,7 @@ type CommonConfig struct {
 	FloppyFiles        []string `mapstructure:"floppy_files"`
 	NetworkNames       []string `mapstructure:"network_names"`
 	ExportNetworkNames []string `mapstructure:"export_network_names"`
+	VMTags             []string `mapstructure:"vm_tags"`
 
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
@@ -131,6 +132,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	if c.IPGetter == "" {
 		c.IPGetter = "auto"
+	}
+
+	if c.VMTags == nil {
+		c.VMTags = make([]string, 0)
 	}
 
 	// Validation

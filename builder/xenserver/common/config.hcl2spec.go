@@ -107,6 +107,7 @@ type FlatConfig struct {
 	PlatformArgs              map[string]string `mapstructure:"platform_args" cty:"platform_args" hcl:"platform_args"`
 	RawInstallTimeout         *string           `mapstructure:"install_timeout" cty:"install_timeout" hcl:"install_timeout"`
 	SourcePath                *string           `mapstructure:"source_path" cty:"source_path" hcl:"source_path"`
+	VMTags                    []string          `mapstructure:"vm_tags" cty:"vm_tags" hcl:"vm_tags"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -218,6 +219,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"platform_args":                &hcldec.AttrSpec{Name: "platform_args", Type: cty.Map(cty.String), Required: false},
 		"install_timeout":              &hcldec.AttrSpec{Name: "install_timeout", Type: cty.String, Required: false},
 		"source_path":                  &hcldec.AttrSpec{Name: "source_path", Type: cty.String, Required: false},
+		"vm_tags":                      &hcldec.AttrSpec{Name: "vm_tags", Type: cty.List(cty.String), Required: false},
 	}
 	return s
 }
