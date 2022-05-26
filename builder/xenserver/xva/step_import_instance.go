@@ -3,6 +3,7 @@ package xva
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -23,6 +24,11 @@ func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBa
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Import Instance")
+
+	if config.SourcePath == "" {
+		log.Println("Skipping imporing instance - no `source_path` configured.")
+		return multistep.ActionContinue
+	}
 
 	// find the SR
 	srs, err := c.GetClient().SR.GetAll(c.GetSessionRef())
