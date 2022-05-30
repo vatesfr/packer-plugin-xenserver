@@ -194,6 +194,8 @@ each category, the available options are alphabetized and described.
 * `vm_memory` (integer) - The size, in megabytes, of the amount of memory to
   allocate for the VM. By default, this is 1024 (1 GB).
 
+* `vm_tags` (array of strings) - A list of tags to add to the VM
+
 ## Differences with other Packer builders
 
 Currently the XenServer builder has some quirks when compared with other Packer builders.
