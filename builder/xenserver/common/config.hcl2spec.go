@@ -107,6 +107,7 @@ type FlatConfig struct {
 	PlatformArgs              map[string]string `mapstructure:"platform_args" cty:"platform_args" hcl:"platform_args"`
 	RawInstallTimeout         *string           `mapstructure:"install_timeout" cty:"install_timeout" hcl:"install_timeout"`
 	SourcePath                *string           `mapstructure:"source_path" cty:"source_path" hcl:"source_path"`
+	DestroyVIFs               *bool             `mapstructure:"destroy_vifs" cty:"destroy_vifs" hcl:"destroy_vifs"`
 }
 
 // FlatMapstructure returns a new FlatConfig.
@@ -218,6 +219,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"platform_args":                &hcldec.AttrSpec{Name: "platform_args", Type: cty.Map(cty.String), Required: false},
 		"install_timeout":              &hcldec.AttrSpec{Name: "install_timeout", Type: cty.String, Required: false},
 		"source_path":                  &hcldec.AttrSpec{Name: "source_path", Type: cty.String, Required: false},
+		"destroy_vifs":                 &hcldec.AttrSpec{Name: "destroy_vifs", Type: cty.Bool, Required: false},
 	}
 	return s
 }
