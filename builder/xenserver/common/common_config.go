@@ -9,10 +9,13 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
+	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
 type CommonConfig struct {
+	bootcommand.VNCConfig          `mapstructure:",squash"`
+
 	Username string `mapstructure:"remote_username"`
 	Password string `mapstructure:"remote_password"`
 	HostIp   string `mapstructure:"remote_host"`
@@ -28,7 +31,6 @@ type CommonConfig struct {
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
 
-	BootCommand     []string `mapstructure:"boot_command"`
 	ShutdownCommand string   `mapstructure:"shutdown_command"`
 
 	RawBootWait string `mapstructure:"boot_wait"`
