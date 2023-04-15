@@ -12,6 +12,10 @@ import (
 )
 
 type StepCreateInstance struct {
+	// The XVA builder assumes it will boot an instance with an OS installed on its disks
+	// while the ISO builder needs packer to create a disk for an OS to be installed on.
+	AssumePreInstalledOS bool
+
 	instance *xsclient.VMRef
 	vdi      *xsclient.VDIRef
 }
@@ -100,43 +104,45 @@ func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 		}
 	}
 
-	err = c.GetClient().VM.RemoveFromOtherConfig(c.GetSessionRef(), instance, "disks")
-	if err != nil {
-		ui.Error(fmt.Sprintf("Error removing disks from VM other-config: %s", err.Error()))
-		return multistep.ActionHalt
-	}
+	if !self.AssumePreInstalledOS {
+		err = c.GetClient().VM.RemoveFromOtherConfig(c.GetSessionRef(), instance, "disks")
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error removing disks from VM other-config: %s", err.Error()))
+			return multistep.ActionHalt
+		}
 
-	// Create VDI for the instance
-	sr, err := config.GetSR(c)
+		// Create VDI for the instance
+		sr, err := config.GetSR(c)
 
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
-		return multistep.ActionHalt
-	}
+		if err != nil {
+			ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
+			return multistep.ActionHalt
+		}
 
-	ui.Say(fmt.Sprintf("Using the following SR for the VM: %s", sr))
+		ui.Say(fmt.Sprintf("Using the following SR for the VM: %s", sr))
 
-	vdi, err := c.GetClient().VDI.Create(c.GetSessionRef(), xenapi.VDIRecord{
-		NameLabel:   "Packer-disk",
-		VirtualSize: int(config.DiskSize * 1024 * 1024),
-		Type:        "user",
-		Sharable:    false,
-		ReadOnly:    false,
-		SR:          sr,
-		OtherConfig: map[string]string{
-			"temp": "temp",
-		},
-	})
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
-		return multistep.ActionHalt
-	}
-	self.vdi = &vdi
+		vdi, err := c.GetClient().VDI.Create(c.GetSessionRef(), xenapi.VDIRecord{
+			NameLabel:   "Packer-disk",
+			VirtualSize: int(config.DiskSize * 1024 * 1024),
+			Type:        "user",
+			Sharable:    false,
+			ReadOnly:    false,
+			SR:          sr,
+			OtherConfig: map[string]string{
+				"temp": "temp",
+			},
+		})
+		if err != nil {
+			ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+		self.vdi = &vdi
 
-	err = ConnectVdi(c, instance, vdi, xsclient.VbdTypeDisk)
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
-		return multistep.ActionHalt
+		err = ConnectVdi(c, instance, vdi, xsclient.VbdTypeDisk)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
+			return multistep.ActionHalt
+		}
 	}
 
 	// Connect Network
