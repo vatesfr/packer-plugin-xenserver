@@ -235,7 +235,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			VdiName:    self.config.ISOName,
 			VdiUuidKey: "isoname_vdi_uuid",
 		},
-		new(stepCreateInstance),
+		new(xscommon.StepCreateInstance),
 		&xscommon.StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 			VdiType:    xsclient.VbdTypeFloppy,
