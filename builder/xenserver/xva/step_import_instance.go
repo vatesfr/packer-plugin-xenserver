@@ -86,6 +86,12 @@ func (self *stepImportInstance) Run(ctx context.Context, state multistep.StateBa
 		return multistep.ActionHalt
 	}
 
+	err = xscommon.AddVMTags(c, instance, config.VMTags)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Failed to add tags: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
 	ui.Say(fmt.Sprintf("Imported instance '%s'", instanceId))
 
 	return multistep.ActionContinue

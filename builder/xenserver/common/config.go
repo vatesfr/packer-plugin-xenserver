@@ -20,6 +20,7 @@ type Config struct {
 	DiskSize       uint              `mapstructure:"disk_size"`
 	CloneTemplate  string            `mapstructure:"clone_template"`
 	VMOtherConfig  map[string]string `mapstructure:"vm_other_config"`
+	VMTags         []string          `mapstructure:"vm_tags"`
 
 	ISOChecksum string   `mapstructure:"iso_checksum"`
 	ISOUrls     []string `mapstructure:"iso_urls"`

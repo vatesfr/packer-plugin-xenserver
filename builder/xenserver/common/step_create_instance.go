@@ -216,6 +216,12 @@ func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 		}
 	}
 
+	err = AddVMTags(c, instance, config.VMTags)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Failed to add tags: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+
 	instanceId, err := c.GetClient().VM.GetUUID(c.GetSessionRef(), instance)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to get VM UUID: %s", err.Error()))
