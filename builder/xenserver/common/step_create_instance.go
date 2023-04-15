@@ -1,4 +1,4 @@
-package iso
+package common
 
 import (
 	"context"
@@ -9,18 +9,21 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 	xsclient "github.com/terra-farm/go-xen-api-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
-type stepCreateInstance struct {
+type StepCreateInstance struct {
+	// The XVA builder assumes it will boot an instance with an OS installed on its disks
+	// while the ISO builder needs packer to create a disk for an OS to be installed on.
+	AssumePreInstalledOS bool
+
 	instance *xsclient.VMRef
 	vdi      *xsclient.VDIRef
 }
 
-func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
-	c := state.Get("client").(*xscommon.Connection)
-	config := state.Get("config").(xscommon.Config)
+	c := state.Get("client").(*Connection)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Create Instance")
@@ -101,43 +104,45 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 		}
 	}
 
-	err = c.GetClient().VM.RemoveFromOtherConfig(c.GetSessionRef(), instance, "disks")
-	if err != nil {
-		ui.Error(fmt.Sprintf("Error removing disks from VM other-config: %s", err.Error()))
-		return multistep.ActionHalt
-	}
+	if !self.AssumePreInstalledOS {
+		err = c.GetClient().VM.RemoveFromOtherConfig(c.GetSessionRef(), instance, "disks")
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error removing disks from VM other-config: %s", err.Error()))
+			return multistep.ActionHalt
+		}
 
-	// Create VDI for the instance
-	sr, err := config.GetSR(c)
+		// Create VDI for the instance
+		sr, err := config.GetSR(c)
 
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
-		return multistep.ActionHalt
-	}
+		if err != nil {
+			ui.Error(fmt.Sprintf("Unable to get SR: %s", err.Error()))
+			return multistep.ActionHalt
+		}
 
-	ui.Say(fmt.Sprintf("Using the following SR for the VM: %s", sr))
+		ui.Say(fmt.Sprintf("Using the following SR for the VM: %s", sr))
 
-	vdi, err := c.GetClient().VDI.Create(c.GetSessionRef(), xenapi.VDIRecord{
-		NameLabel:   "Packer-disk",
-		VirtualSize: int(config.DiskSize * 1024 * 1024),
-		Type:        "user",
-		Sharable:    false,
-		ReadOnly:    false,
-		SR:          sr,
-		OtherConfig: map[string]string{
-			"temp": "temp",
-		},
-	})
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
-		return multistep.ActionHalt
-	}
-	self.vdi = &vdi
+		vdi, err := c.GetClient().VDI.Create(c.GetSessionRef(), xenapi.VDIRecord{
+			NameLabel:   "Packer-disk",
+			VirtualSize: int(config.DiskSize * 1024 * 1024),
+			Type:        "user",
+			Sharable:    false,
+			ReadOnly:    false,
+			SR:          sr,
+			OtherConfig: map[string]string{
+				"temp": "temp",
+			},
+		})
+		if err != nil {
+			ui.Error(fmt.Sprintf("Unable to create packer disk VDI: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+		self.vdi = &vdi
 
-	err = xscommon.ConnectVdi(c, instance, vdi, xsclient.VbdTypeDisk)
-	if err != nil {
-		ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
-		return multistep.ActionHalt
+		err = ConnectVdi(c, instance, vdi, xsclient.VbdTypeDisk)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
+			return multistep.ActionHalt
+		}
 	}
 
 	// Connect Network
@@ -174,7 +179,7 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 		}
 
 		log.Printf("Creating VIF on network '%s' on VM '%s'\n", network, instance)
-		_, err = xscommon.ConnectNetwork(c, network, instance, "0")
+		_, err = ConnectNetwork(c, network, instance, "0")
 
 		if err != nil {
 			ui.Error(fmt.Sprintf("Failed to create VIF with error: %v", err))
@@ -203,7 +208,7 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 
 			//we need the VIF index string
 			vifIndexString := fmt.Sprintf("%d", i)
-			_, err = xscommon.ConnectNetwork(c, networks[0], instance, vifIndexString)
+			_, err = ConnectNetwork(c, networks[0], instance, vifIndexString)
 
 			if err != nil {
 				ui.Say(fmt.Sprintf("Failed to connect VIF with error: %v", err.Error()))
@@ -223,14 +228,14 @@ func (self *stepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 	return multistep.ActionContinue
 }
 
-func (self *stepCreateInstance) Cleanup(state multistep.StateBag) {
-	config := state.Get("config").(xscommon.Config)
+func (self *StepCreateInstance) Cleanup(state multistep.StateBag) {
+	config := state.Get("config").(Config)
 	if config.ShouldKeepVM(state) {
 		return
 	}
 
 	ui := state.Get("ui").(packer.Ui)
-	c := state.Get("client").(*xscommon.Connection)
+	c := state.Get("client").(*Connection)
 
 	if self.instance != nil {
 		ui.Say("Destroying VM")
