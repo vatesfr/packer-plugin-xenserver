@@ -28,6 +28,7 @@ type FlatConfig struct {
 	FloppyFiles               []string          `mapstructure:"floppy_files" cty:"floppy_files" hcl:"floppy_files"`
 	NetworkNames              []string          `mapstructure:"network_names" cty:"network_names" hcl:"network_names"`
 	ExportNetworkNames        []string          `mapstructure:"export_network_names" cty:"export_network_names" hcl:"export_network_names"`
+	VMTags                    []string          `mapstructure:"vm_tags" cty:"vm_tags" hcl:"vm_tags"`
 	HostPortMin               *uint             `mapstructure:"host_port_min" cty:"host_port_min" hcl:"host_port_min"`
 	HostPortMax               *uint             `mapstructure:"host_port_max" cty:"host_port_max" hcl:"host_port_max"`
 	BootCommand               []string          `mapstructure:"boot_command" cty:"boot_command" hcl:"boot_command"`
@@ -140,6 +141,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"floppy_files":                 &hcldec.AttrSpec{Name: "floppy_files", Type: cty.List(cty.String), Required: false},
 		"network_names":                &hcldec.AttrSpec{Name: "network_names", Type: cty.List(cty.String), Required: false},
 		"export_network_names":         &hcldec.AttrSpec{Name: "export_network_names", Type: cty.List(cty.String), Required: false},
+		"vm_tags":                      &hcldec.AttrSpec{Name: "vm_tags", Type: cty.List(cty.String), Required: false},
 		"host_port_min":                &hcldec.AttrSpec{Name: "host_port_min", Type: cty.Number, Required: false},
 		"host_port_max":                &hcldec.AttrSpec{Name: "host_port_max", Type: cty.Number, Required: false},
 		"boot_command":                 &hcldec.AttrSpec{Name: "boot_command", Type: cty.List(cty.String), Required: false},
