@@ -1,4 +1,4 @@
-//go:generate mapstructure-to-hcl2 -type Config
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config
 package common
 
 import (
@@ -20,12 +20,12 @@ type Config struct {
 	DiskSize       uint              `mapstructure:"disk_size"`
 	CloneTemplate  string            `mapstructure:"clone_template"`
 	VMOtherConfig  map[string]string `mapstructure:"vm_other_config"`
+	VMTags         []string          `mapstructure:"vm_tags"`
 
-	ISOChecksum     string   `mapstructure:"iso_checksum"`
-	ISOChecksumType string   `mapstructure:"iso_checksum_type"`
-	ISOUrls         []string `mapstructure:"iso_urls"`
-	ISOUrl          string   `mapstructure:"iso_url"`
-	ISOName         string   `mapstructure:"iso_name"`
+	ISOChecksum string   `mapstructure:"iso_checksum"`
+	ISOUrls     []string `mapstructure:"iso_urls"`
+	ISOUrl      string   `mapstructure:"iso_url"`
+	ISOName     string   `mapstructure:"iso_name"`
 
 	PlatformArgs map[string]string `mapstructure:"platform_args"`
 

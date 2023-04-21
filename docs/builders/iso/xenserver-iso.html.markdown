@@ -29,21 +29,34 @@ each category, the available options are alphabetized and described.
 
 * `iso_checksum` (string) - The checksum for the OS ISO file. Because ISO
   files are so large, this is required and Packer will verify it prior
-  to booting a virtual machine with the ISO attached. The type of the
-  checksum is specified with `iso_checksum_type`, documented below.
+  to booting a virtual machine with the ISO attached. The type of
+  the checksum is specified within the checksum field as a prefix, ex:
+  "md5:{$checksum}". The type of the checksum can also be omitted and
+  Packer will try to infer it based on string length. Valid values are
+  "none", "{$checksum}", "md5:{$checksum}", "sha1:{$checksum}",
+  "sha256:{$checksum}", "sha512:{$checksum}" or "file:{$path}". Here is a
+  list of valid checksum values:
+   * md5:090992ba9fd140077b0661cb75f7ce13
+   * 090992ba9fd140077b0661cb75f7ce13
+   * sha1:ebfb681885ddf1234c18094a45bbeafd91467911
+   * ebfb681885ddf1234c18094a45bbeafd91467911
+   * sha256:ed363350696a726b7932db864dda019bd2017365c9e299627830f06954643f93
+   * ed363350696a726b7932db864dda019bd2017365c9e299627830f06954643f93
+   * file:http://releases.ubuntu.com/20.04/SHA256SUMS
+   * file:file://./local/path/file.sum
+   * file:./local/path/file.sum
+   * none
+  Although the checksum will not be verified when it is set to "none",
+  this is not recommended since these files can be very large and
+  corruption does happen from time to time.
 
-* `iso_checksum_type` (string) - The type of the checksum specified in
-  `iso_checksum`. Valid values are "none", "md5", "sha1", "sha256", or
-  "sha512" currently. While "none" will skip checksumming, this is not
-  recommended since ISO files are generally large and corruption does happen
-  from time to time.
 
 * `iso_url` (string) - A URL to the ISO containing the installation image.
   This URL can be either an HTTP URL or a file URL (or path to a file).
   If this is an HTTP URL, Packer will download it and cache it between
   runs.
 
-* `remote_host` (string) - The host of the Xenserver / XCP-ng pool primary. Typically these will be specified through environment variables as seen in the [examples](../../examples/centos8.json).
+* `remote_host` (string) - The host of the Xenserver / XCP-ng pool primary. Typically these will be specified through environment variables as seen in the [examples](../../../examples).
 
 * `remote_username` (string) - The XenServer username used to access the remote machine.
 
@@ -59,7 +72,7 @@ each category, the available options are alphabetized and described.
   be to type just enough to initialize the operating system installer. Special
   keys can be typed as well, and are covered in the section below on the boot
   command. If this is not specified, it is assumed the installer will start
-  itself. See the [Ubuntu](../../examples/ubuntu-2004.json) and [centos](../../examples/centos8.json) examples to see how these are used to launch autoinstall and kickstart respectively.
+  itself. See the [Ubuntu](../../../examples/ubuntu) and [centos](../../../examples/centos) examples to see how these are used to launch autoinstall and kickstart respectively.
 
 * `boot_wait` (string) - The time to wait after booting the initial virtual
   machine before typing the `boot_command`. The value of this should be
@@ -198,6 +211,8 @@ each category, the available options are alphabetized and described.
 * `vm_memory` (integer) - The size, in megabytes, of the amount of memory to
   allocate for the VM. By default, this is 1024 (1 GB).
 
+* `vm_tags` (array of strings) - A list of tags to add to the VM
+
 ## Differences with other Packer builders
 
 Currently the XenServer builder has some quirks when compared with other Packer builders.
@@ -256,4 +271,4 @@ The available variables are:
   configuration parameter. If `http_directory` isn't specified, these will be
   blank!
 
-See the [examples](../../examples/) for working boot commands.
+See the [examples](../../../examples) for working boot commands.

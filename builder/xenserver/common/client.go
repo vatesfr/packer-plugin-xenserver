@@ -624,6 +624,17 @@ func ConnectNetwork(c *Connection, networkRef xenapi.NetworkRef, vmRef xenapi.VM
 	return &vif, nil
 }
 
+func AddVMTags(c *Connection, vmRef xenapi.VMRef, tags []string) error {
+	for _, tag := range tags {
+		log.Printf("Adding tag %s to VM %s\n", tag, vmRef)
+		err := c.GetClient().VM.AddTags(c.session, vmRef, tag)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 //      Setters
 
 func (self *VM) SetIsATemplate(is_a_template bool) (err error) {
