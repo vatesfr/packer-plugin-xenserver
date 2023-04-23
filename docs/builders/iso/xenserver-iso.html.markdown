@@ -89,6 +89,9 @@ each category, the available options are alphabetized and described.
 * `disk_size` (integer) - The size, in megabytes, of the hard disk to create
   for the VM. By default, this is 40000 (about 40 GB).
 
+* `firmware` (string) - Whether to use `bios` or `uefi` as the boot firmware
+  for the resulting VM. Defaults to `bios`.
+
 * `floppy_files` (array of strings) - A list of files to place onto a floppy
   disk that is attached when the VM is booted. This is most useful
   for unattended Windows installs, which look for an `Autounattend.xml` file
