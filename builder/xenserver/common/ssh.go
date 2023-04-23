@@ -91,9 +91,9 @@ func ExecuteHostSSHCmd(state multistep.StateBag, cmd string) (stdout string, err
 	sshAddress, _ := SSHAddress(state)
 	// Setup connection config
 	sshConfig := &gossh.ClientConfig{
-		User: config.Username,
+		User: config.XSUsername,
 		Auth: []gossh.AuthMethod{
-			gossh.Password(config.Password),
+			gossh.Password(config.XSPassword),
 		},
 		HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 	}

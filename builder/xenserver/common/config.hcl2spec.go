@@ -18,8 +18,8 @@ type FlatConfig struct {
 	PackerOnError             *string           `mapstructure:"packer_on_error" cty:"packer_on_error" hcl:"packer_on_error"`
 	PackerUserVars            map[string]string `mapstructure:"packer_user_variables" cty:"packer_user_variables" hcl:"packer_user_variables"`
 	PackerSensitiveVars       []string          `mapstructure:"packer_sensitive_variables" cty:"packer_sensitive_variables" hcl:"packer_sensitive_variables"`
-	Username                  *string           `mapstructure:"remote_username" cty:"remote_username" hcl:"remote_username"`
-	Password                  *string           `mapstructure:"remote_password" cty:"remote_password" hcl:"remote_password"`
+	XSUsername                *string           `mapstructure:"remote_username" cty:"remote_username" hcl:"remote_username"`
+	XSPassword                *string           `mapstructure:"remote_password" cty:"remote_password" hcl:"remote_password"`
 	HostIp                    *string           `mapstructure:"remote_host" cty:"remote_host" hcl:"remote_host"`
 	VMName                    *string           `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	VMDescription             *string           `mapstructure:"vm_description" cty:"vm_description" hcl:"vm_description"`

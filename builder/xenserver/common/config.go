@@ -12,7 +12,7 @@ import (
 type Config struct {
 	common.PackerConfig `mapstructure:",squash"`
 	CommonConfig        `mapstructure:",squash"`
-	Comm                communicator.Config `mapstructure:",squash"`
+	communicator.Config `mapstructure:",squash"`
 
 	VCPUsMax       uint              `mapstructure:"vcpus_max"`
 	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`

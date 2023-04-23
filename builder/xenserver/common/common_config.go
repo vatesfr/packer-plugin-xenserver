@@ -13,9 +13,9 @@ import (
 )
 
 type CommonConfig struct {
-	Username string `mapstructure:"remote_username"`
-	Password string `mapstructure:"remote_password"`
-	HostIp   string `mapstructure:"remote_host"`
+	XSUsername string `mapstructure:"remote_username"`
+	XSPassword string `mapstructure:"remote_password"`
+	HostIp     string `mapstructure:"remote_host"`
 
 	VMName             string   `mapstructure:"vm_name"`
 	VMDescription      string   `mapstructure:"vm_description"`
@@ -136,11 +136,11 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	// Validation
 
-	if c.Username == "" {
+	if c.XSUsername == "" {
 		errs = append(errs, errors.New("remote_username must be specified."))
 	}
 
-	if c.Password == "" {
+	if c.XSPassword == "" {
 		errs = append(errs, errors.New("remote_password must be specified."))
 	}
 
