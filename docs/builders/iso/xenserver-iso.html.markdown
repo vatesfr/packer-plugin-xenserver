@@ -133,6 +133,9 @@ each category, the available options are alphabetized and described.
   must point to the same file (same checksum). By default this is empty
   and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
 
+* `tools_iso_name` (string) - Choose the tools iso you want to use. 
+   Usually "guest-tools.iso", or "xs-tools.iso". Not setting this variable won't plug any tools.
+
 * `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
   can be "always", "never" or "on_success". By default this is "never", and Packer
   always deletes the VM regardless of whether the process succeeded and an artifact
