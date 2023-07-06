@@ -11,6 +11,6 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/terra-farm/go-xen-api-client v0.0.2
 	github.com/zclconf/go-cty v1.10.0
-	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f
+	golang.org/x/crypto v0.11.0
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 )
