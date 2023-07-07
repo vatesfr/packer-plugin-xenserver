@@ -3,8 +3,8 @@ package xva
 import (
 	"testing"
 
-	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
 func testConfig() map[string]interface{} {
@@ -40,7 +40,7 @@ func TestBuilderPrepare_Defaults(t *testing.T) {
 		t.Fatalf("should not have error: %s", err)
 	}
 
-	if b.config.ToolsIsoName != "xs-tools.iso" {
+	if b.config.ToolsIsoName != "" {
 		t.Errorf("bad tools ISO name: %s", b.config.ToolsIsoName)
 	}
 
