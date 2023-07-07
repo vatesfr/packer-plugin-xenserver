@@ -76,10 +76,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		c.RawBootWait = "5s"
 	}
 
-	if c.ToolsIsoName == "" {
-		c.ToolsIsoName = ""
-	}
-
 	if c.HTTPPortMin == 0 {
 		c.HTTPPortMin = 8000
 	}
