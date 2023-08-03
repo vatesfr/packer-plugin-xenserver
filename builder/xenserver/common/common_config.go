@@ -13,9 +13,10 @@ import (
 )
 
 type CommonConfig struct {
-	Username string `mapstructure:"remote_username"`
-	Password string `mapstructure:"remote_password"`
-	HostIp   string `mapstructure:"remote_host"`
+	Username    string `mapstructure:"remote_username"`
+	Password    string `mapstructure:"remote_password"`
+	HostIp      string `mapstructure:"remote_host"`
+	HostSshPort uint   `mapstructure:"remote_ssh_port"`
 
 	VMName             string   `mapstructure:"vm_name"`
 	VMDescription      string   `mapstructure:"vm_description"`
@@ -63,6 +64,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	var errs []error
 
 	// Set default values
+
+	if c.HostSshPort == 0 {
+		c.HostSshPort = 22
+	}
 
 	if c.HostPortMin == 0 {
 		c.HostPortMin = 5900

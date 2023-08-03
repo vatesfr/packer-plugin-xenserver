@@ -61,6 +61,10 @@ func TestBuilderPrepare_Defaults(t *testing.T) {
 	if b.config.KeepVM != "never" {
 		t.Errorf("bad keep instance: %s", b.config.KeepVM)
 	}
+
+	if b.config.HostSshPort != 22 {
+		t.Errorf("bad ssh port: %d", b.config.HostSshPort)
+	}
 }
 
 func TestBuilderPrepare_DiskSize(t *testing.T) {

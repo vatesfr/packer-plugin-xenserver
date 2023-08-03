@@ -58,6 +58,8 @@ each category, the available options are alphabetized and described.
 * `remote_host` (string) - The host of the Xenserver / XCP-ng pool primary. Typically, these will be specified through
   environment variables as seen in the [examples](../../../examples).
 
+* `remote_ssh_port` (integer) - The port that SSH will be listening on in the Xenserver / XCP-ng pool primary. By default this is 22.
+
 * `remote_username` (string) - The XenServer username used to access the remote machine.
 
 * `remote_password` (string) - The XenServer password for access to the remote machine.

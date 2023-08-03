@@ -17,7 +17,7 @@ import (
 
 func SSHAddress(state multistep.StateBag) (string, error) {
 	sshIP := state.Get("ssh_address").(string)
-	sshHostPort := 22
+	sshHostPort := state.Get("ssh_port").(uint)
 	return fmt.Sprintf("%s:%d", sshIP, sshHostPort), nil
 }
 
