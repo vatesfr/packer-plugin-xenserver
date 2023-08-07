@@ -187,10 +187,10 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 	}
 	steps := []multistep.Step{
-		&xscommon.StepPrepareOutputDir{
-			Force: self.config.PackerForce,
-			Path:  self.config.OutputDir,
-		},
+	      &xscommon.StepPrepareOutputDir{
+		Force: self.config.PackerForce,
+		Path:  self.config.OutputDir,
+	},
 		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 			Label: "cidata",
