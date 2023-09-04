@@ -288,7 +288,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		new(xscommon.StepShutdown),
 	}
 
-	if self.config.SetTemplate == "True" {
+	if !self.config.SkipSetTemplate {
 		steps = append(steps,
 			new(xscommon.StepSetVmToTemplate))
 	}
