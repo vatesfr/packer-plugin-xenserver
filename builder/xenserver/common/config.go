@@ -34,6 +34,7 @@ type Config struct {
 	SourcePath        string        `mapstructure:"source_path"`
 
 	Firmware string `mapstructure:"firmware"`
+	SkipSetTemplate bool `mapstructure:"skip_set_template"`
 
 	ctx interpolate.Context
 }

@@ -286,7 +286,14 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		new(commonsteps.StepProvision),
 		new(xscommon.StepShutdown),
-		new(xscommon.StepSetVmToTemplate),
+	}
+
+	if !self.config.SkipSetTemplate {
+		steps = append(steps,
+			new(xscommon.StepSetVmToTemplate))
+	}
+
+	steps = append(steps,
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
 		},
@@ -299,8 +306,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
-		new(xscommon.StepExport),
-	}
+		new(xscommon.StepExport))
 
 	if self.config.ISOName == "" {
 		steps = append(download_steps, steps...)
