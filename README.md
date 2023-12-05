@@ -44,7 +44,7 @@ If you are using an older version of packer or are still using json templates yo
 ### Dependencies
 * Packer >= v1.7.1 (https://packer.io)
 * XenServer / Citrix Hypervisor > 7.6
-* Golang 1.17
+* Golang 1.18
 
 ## Compile the plugin
 
