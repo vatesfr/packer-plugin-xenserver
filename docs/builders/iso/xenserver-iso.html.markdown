@@ -18,7 +18,6 @@ the OS, then shutting it down. The result of the XenServer builder is a
 directory containing all the files necessary to run the virtual machine
 portably.
 
-
 ## Configuration Reference
 
 There are many configuration options available for the XenServer builder.
@@ -34,21 +33,21 @@ each category, the available options are alphabetized and described.
   "md5:{$checksum}". The type of the checksum can also be omitted and
   Packer will try to infer it based on string length. Valid values are
   "none", "{$checksum}", "md5:{$checksum}", "sha1:{$checksum}",
-  "sha256:{$checksum}", "sha512:{$checksum}" or "file:{$path}". Here is a
-  list of valid checksum values:
-   * md5:090992ba9fd140077b0661cb75f7ce13
-   * 090992ba9fd140077b0661cb75f7ce13
-   * sha1:ebfb681885ddf1234c18094a45bbeafd91467911
-   * ebfb681885ddf1234c18094a45bbeafd91467911
-   * sha256:ed363350696a726b7932db864dda019bd2017365c9e299627830f06954643f93
-   * ed363350696a726b7932db864dda019bd2017365c9e299627830f06954643f93
-   * file:http://releases.ubuntu.com/20.04/SHA256SUMS
-   * file:file://./local/path/file.sum
-   * file:./local/path/file.sum
-   * none
-  Although the checksum will not be verified when it is set to "none",
-  this is not recommended since these files can be very large and
-  corruption does happen from time to time.
+  "sha256:{$checksum}", "sha512:{$checksum}" or "file:{$path}". Here is
+  an example list of valid checksum values:
+    * `md5:090992ba9fd140077b0661cb75f7ce13`
+    * `090992ba9fd140077b0661cb75f7ce13`
+    * `sha1:ebfb681885ddf1234c18094a45bbeafd91467911`
+    * `ebfb681885ddf1234c18094a45bbeafd91467911`
+    * `sha256:ed363350696a726b7932db864dda019bd2017365c9e299627830f06954643f93`
+    * `ed363350696a726b7932db864dda019bd2017365c9e299627830f06954643f93`
+    * `file:http://releases.ubuntu.com/20.04/SHA256SUMS`
+    * `file:file://./local/path/file.sum`
+    * `file:./local/path/file.sum`
+    * `none`
+        * Although the checksum will not be verified when it is set to "none",
+          this is not recommended since these files can be very large and
+          corruption does happen from time to time.
 
 
 * `iso_url` (string) - A URL to the ISO containing the installation image.
@@ -56,7 +55,8 @@ each category, the available options are alphabetized and described.
   If this is an HTTP URL, Packer will download it and cache it between
   runs.
 
-* `remote_host` (string) - The host of the Xenserver / XCP-ng pool primary. Typically these will be specified through environment variables as seen in the [examples](../../../examples).
+* `remote_host` (string) - The host of the Xenserver / XCP-ng pool primary. Typically, these will be specified through
+  environment variables as seen in the [examples](../../../examples).
 
 * `remote_username` (string) - The XenServer username used to access the remote machine.
 
@@ -72,11 +72,12 @@ each category, the available options are alphabetized and described.
   be to type just enough to initialize the operating system installer. Special
   keys can be typed as well, and are covered in the section below on the boot
   command. If this is not specified, it is assumed the installer will start
-  itself. See the [Ubuntu](../../../examples/ubuntu) and [centos](../../../examples/centos) examples to see how these are used to launch autoinstall and kickstart respectively.
+  itself. See the [Ubuntu](../../../examples/ubuntu) and [centos](../../../examples/centos) examples to see how these
+  are used to launch autoinstall and kickstart respectively.
 
 * `boot_wait` (string) - The time to wait after booting the initial virtual
   machine before typing the `boot_command`. The value of this should be
-  a duration. Examples are "5s" and "1m30s" which will cause Packer to wait
+  a duration. Examples are `5s` and `1m30s` which will cause Packer to wait
   five seconds and one minute 30 seconds, respectively. If this isn't specified,
   the default is 10 seconds.
 
@@ -108,9 +109,9 @@ each category, the available options are alphabetized and described.
   this is only useful with "keep_vm" set to "always" or "on_success".
 
 * `http_directory` (string) - Path to a directory to serve using an HTTP
-  server. The files in this directory will be available over HTTP that will
+  server. The files in this directory will be available over HTTP which will
   be requestable from the virtual machine. This is useful for hosting
-  kickstart files and so on. By default this is "", which means no HTTP
+  kickstart files and so on. By default, this is `""`, which means no HTTP
   server will be started. The address and port of the HTTP server will be
   available as variables in `boot_command`. This is covered in more detail
   below.
@@ -120,7 +121,7 @@ each category, the available options are alphabetized and described.
   Because Packer often runs in parallel, Packer will choose a randomly available
   port in this range to run the HTTP server. If you want to force the HTTP
   server to be on one port, make this minimum and maximum port the same.
-  By default the values are 8000 and 9000, respectively.
+  By default, the values are 8000 and 9000, respectively.
 
 * `install_timeout` (string) - The amount of time to wait after booting the VM
   for the installer to shut itself down.
@@ -130,44 +131,55 @@ each category, the available options are alphabetized and described.
 * `iso_urls` (array of strings) - Multiple URLs for the ISO to download.
   Packer will try these in order. If anything goes wrong attempting to download
   or while downloading a single URL, it will move on to the next. All URLs
-  must point to the same file (same checksum). By default this is empty
+  must point to the same file (same checksum). By default, this is empty
   and `iso_url` is used. Only one of `iso_url` or `iso_urls` can be specified.
 
-* `tools_iso_name` (string) - Choose the tools iso you want to use. 
-   Usually "guest-tools.iso", or "xs-tools.iso". Not setting this variable won't plug any tools.
+* `tools_iso_name` (string) - Choose the tools iso you want to use.
+  Usually "guest-tools.iso", or "xs-tools.iso". Not setting this variable causes no tools-related
+  ISO to be attached.
 
 * `keep_vm` (string) - Determine when to keep the VM and when to clean it up. This
-  can be "always", "never" or "on_success". By default this is "never", and Packer
+  can be `always`, `never` or `on_success`. The default is `never`, and Packer
   always deletes the VM regardless of whether the process succeeded and an artifact
-  was produced. "always" asks Packer to leave the VM at the end of the process
-  regardless of success. "on_success" requests that the VM only be cleaned up if an
+  was produced. `always` asks Packer to leave the VM at the end of the process
+  regardless of success. `on_success` requests that the VM only be cleaned up if an
   artifact was produced. The latter is useful for debugging templates that fail.
 
-* `skip_set_template` (bool) - If you want to get the full XVA, to be able to import directly the VM
-  instead of using the output template, you can set that to True
-  
-* `network_names` (array of strings) - A list of networks identified by their name label which 
+* `ip_getter` (string) - Defines the method by which the IP of the guest machine is
+  identified. Options are: `auto`, `tools`, `http`. The default is `auto`, which will
+  attempt both methods. `tools` requires that the guest tools be installed and functional
+  inside the quest machine.
+
+* `skip_set_template` (bool) - If you want to get the full XVA, to be able to import the VM directly
+  instead of using the output template, you can set this to `true`.
+
+* `network_names` (array of strings) - A list of networks identified by their name label which
   will be used for the VM during creation. The first network will correspond to the VM's
-  first network interface (VIF), the second will corespond to the second VIF and so on.
+  first network interface (VIF), the second will correspond to the second VIF and so on.
+
+* `export_network_names` (array of strings) - A list of networks identified by their name label which
+  will be attached to the export. The first network will correspond to the VM's
+  first network interface (VIF), the second will correspond to the second VIF and so on.
 
 * `output_directory` (string) - This is the path to the directory where the
   resulting virtual machine will be created. This may be relative or absolute.
   If relative, the path is relative to the working directory when `packer`
   is executed. This directory must not exist or be empty prior to running the builder.
-  By default this is "output-BUILDNAME" where "BUILDNAME" is the name
+  By default, this is "output-BUILDNAME" where "BUILDNAME" is the name
   of the build.
 
 * `platform_args` (object of key/value strings) - The platform args.
-  Defaults to 
-```javascript
+  Defaults to
+
+```json
 {
-    "viridian": "false",
-    "nx": "true",
-    "pae": "true",
-    "apic": "true",
-    "timeoffset": "0",
-    "acpi": "1",
-    "cores-per-socket": "1"
+  "viridian": "false",
+  "nx": "true",
+  "pae": "true",
+  "apic": "true",
+  "timeoffset": "0",
+  "acpi": "1",
+  "cores-per-socket": "1"
 }
 ```
 
@@ -176,6 +188,12 @@ each category, the available options are alphabetized and described.
   will shut down the VM gracefully through the Xen api's vm shutdown command. Unless
   you have special requirements this should typically be left to its default.
 
+* `sr_name` (string) - The SR to use for storing the disk for the VM that Packer
+  creates. By default, the default SR of the system will be used.
+
+* `sr_iso_name` (string) - The SR to use for uploading the provided ISO.
+  By default, the default SR of the system will be used.
+
 * `ssh_host_port_min` and `ssh_host_port_max` (integer) - The minimum and
   maximum port to use for the SSH port on the host machine which is forwarded
   to the SSH port on the guest machine. Because Packer often runs in parallel,
@@ -183,48 +201,50 @@ each category, the available options are alphabetized and described.
   host port.
 
 * `ssh_key_path` (string) - Path to a private key to use for authenticating
-  with SSH. By default this is not set (key-based auth won't be used).
+  with SSH. By default, this is not set (key-based auth won't be used).
   The associated public key is expected to already be configured on the
   VM being prepared by some other process (kickstart, etc.).
 
 * `ssh_password` (string) - The password for `ssh_username` to use to
-  authenticate with SSH. By default this is the empty string.
+  authenticate with SSH. By default, this is the empty string.
 
 * `ssh_port` (integer) - The port that SSH will be listening on in the guest
-  virtual machine. By default this is 22.
+  virtual machine. By default, this is `22`.
 
 * `ssh_wait_timeout` (string) - The duration to wait for SSH to become
-  available. By default this is "20m", or 20 minutes. Note that this should
+  available. By default, this is `20m`, or 20 minutes. **Note**: that this should
   be quite long since the timer begins as soon as the virtual machine is booted.
 
 * `tools_iso_name` (string) - The name of the XenServer Tools ISO. Defaults to
-  "xs-tools.iso".
+  `xs-tools.iso`.
 
 * `vm_description` (string) - The description of the new virtual
-  machine. By default this is the empty string.
+  machine. By default, this is an empty string.
 
 * `vm_name` (string) - This is the name of the new virtual
-  machine, without the file extension. By default this is
-  "packer-BUILDNAME-TIMESTAMP", where "BUILDNAME" is the name of the build.
+  machine, without the file extension. By default, this is
+  `packer-BUILDNAME-TIMESTAMP`, where "BUILDNAME" is the name of the build.
 
 * `vcpus_max` (integer) - The maximum number of VCPUs for the VM.
-  By default this is 1.
+  By default, this is `1`.
 
 * `vcpus_atstartup` (integer) - The number of startup VCPUs for the VM.
-  By default this is 1.
+  By default, this is `1`.
 
 * `vm_memory` (integer) - The size, in megabytes, of the amount of memory to
-  allocate for the VM. By default, this is 1024 (1 GB).
+  allocate for the VM. By default, this is `1024` (1 GB).
 
 * `vm_tags` (array of strings) - A list of tags to add to the VM
 
 ## Differences with other Packer builders
 
-Currently the XenServer builder has some quirks when compared with other Packer builders.
+Currently, the XenServer builder has some quirks when compared with other Packer builders.
 
 The builder currently only works remotely.
 
-The installer is expected to shut down the VM to indicate that it has completed. This is in contrast to other builders, which instead detect completion by a successful SSH connection. The reason for this difference is that currently the builder has no way of knowing what the IP address of the VM is without starting it on the HIMN.
+The installer is expected to shut down the VM to indicate that it has completed. This is in contrast to other builders,
+which instead detect completion by a successful SSH connection. The reason for this difference is that currently the
+builder has no way of knowing what the IP address of the VM is without starting it on the HIMN.
 
 ## Boot Command
 
@@ -237,8 +257,8 @@ As documented above, the `boot_command` is an array of strings. The
 strings are all typed in sequence. It is an array only to improve readability
 within the template.
 
-The boot command is "typed" character for character over a VNC connection
-to the machine, simulating a human actually typing the keyboard. There are
+The boot command is "typed" character by character over a VNC connection
+to the machine, simulating a human actually typing on the keyboard. There are
 a set of special keys available. If these are in your boot command, they
 will be replaced by the proper key:
 
@@ -269,6 +289,7 @@ will be replaced by the proper key:
 
 In addition to the special keys, each command to type is treated as a
 configuration template.
+
 The available variables are:
 
 * `HTTPIP` and `HTTPPort` - The IP and port, respectively of an HTTP server
