@@ -52,12 +52,25 @@ If you are using an older version of packer or are still using json templates yo
 Once you have installed Packer, you must compile this plugin and install the
 resulting binary.
 
+Documentation for Plugins directory: [Official Docs](https://developer.hashicorp.com/packer/docs/configure#packer-s-plugin-directory)
+
+### Linux/MacOS
+
 ```shell
 go build -o packer-plugin-xenserver
 
 # Add the plugin to the location packer expects it to be installed in
 mkdir -p ~/.packer.d/plugins/
 cp packer-plugin-xenserver  ~/.packer.d/plugins
+```
+
+### Windows (Powershell)
+
+```powershell
+go build -o packer-plugin-xenserver
+
+mkdir "%APPDATA%\packer.d\plugins"
+cp packer-plugin-xenserver  "%APPDATA%\packer.d\plugins"
 ```
 
 # Documentation
