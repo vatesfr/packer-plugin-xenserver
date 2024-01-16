@@ -1,7 +1,7 @@
 packer {
   required_plugins {
    xenserver= {
-      version = ">= v0.3.2"
+      version = ">= v0.6.0"
       source = "github.com/ddelnano/xenserver"
     }
   }

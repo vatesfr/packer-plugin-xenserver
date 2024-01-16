@@ -2,7 +2,7 @@
 
 This builder plugin extends packer.io to support building images for XenServer. 
 
-This is a fork of the original builder since the original project was abandoned and no longer compilied with recent versions of Go or worked with Xenserver 7.6 and later.
+This is a fork of the original builder since the original project was abandoned and no longer compiled with recent versions of Go or worked with Xenserver 7.6 and later.
 
 It improves the original project in the following ways:
 1. Developed alongside the [Xenorchestra terraform provider](https://github.com/ddelnano/terraform-provider-xenorchestra) to ensure the hashicorp ecosystem is interoperable.
@@ -13,6 +13,7 @@ It improves the original project in the following ways:
 At the time of this writing the packer builder has been verified to work with Xenserver 7.6 and can launch VMs with the packer output through the xenorchestra terraform provider.
 
 The following list contains things that are incomplete but will be worked on soon:
+
 - The documentation is still in an inconsistent state with upstream
 - XVA builder is untested
 - Lots of dead code to remove from upstream
@@ -24,7 +25,7 @@ The packer builder can be installed via `packer init` as long as the packer temp
 packer {
   required_plugins {
    xenserver= {
-      version = ">= v0.3.2"
+      version = ">= v0.6.0"
       source = "github.com/ddelnano/xenserver"
     }
   }
@@ -51,12 +52,25 @@ If you are using an older version of packer or are still using json templates yo
 Once you have installed Packer, you must compile this plugin and install the
 resulting binary.
 
-```shell
-$ go build -o packer-plugin-xenserver
+Documentation for Plugins directory: [Official Docs](https://developer.hashicorp.com/packer/docs/configure#packer-s-plugin-directory)
 
-# Add the builder to the location packer expects it to be installed in
-$ mkdir -p ~/.packer.d/plugins/
-$ cp builder-xenserver-iso  ~/.packer.d/plugins/packer-builder-xenserver-iso
+### Linux/MacOS
+
+```shell
+go build -o packer-plugin-xenserver
+
+# Add the plugin to the location packer expects it to be installed in
+mkdir -p ~/.packer.d/plugins/
+cp packer-plugin-xenserver  ~/.packer.d/plugins
+```
+
+### Windows (Powershell)
+
+```powershell
+go build -o packer-plugin-xenserver
+
+mkdir "%APPDATA%\packer.d\plugins"
+cp packer-plugin-xenserver  "%APPDATA%\packer.d\plugins"
 ```
 
 # Documentation
