@@ -122,7 +122,7 @@ func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 		ui.Say(fmt.Sprintf("Using the following SR for the VM: %s", sr))
 
 		vdi, err := c.GetClient().VDI.Create(c.GetSessionRef(), xenapi.VDIRecord{
-			NameLabel:   "Packer-disk",
+			NameLabel:   config.DiskName,
 			VirtualSize: int(config.DiskSize * 1024 * 1024),
 			Type:        "user",
 			Sharable:    false,
