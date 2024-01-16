@@ -17,6 +17,7 @@ type Config struct {
 	VCPUsMax       uint              `mapstructure:"vcpus_max"`
 	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`
 	VMMemory       uint              `mapstructure:"vm_memory"`
+	DiskName       string            `mapstructure:"disk_name"`
 	DiskSize       uint              `mapstructure:"disk_size"`
 	CloneTemplate  string            `mapstructure:"clone_template"`
 	VMOtherConfig  map[string]string `mapstructure:"vm_other_config"`

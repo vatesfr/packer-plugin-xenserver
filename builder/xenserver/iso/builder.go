@@ -53,6 +53,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		self.config.RawInstallTimeout = "200m"
 	}
 
+	if self.config.DiskName == "" {
+		self.config.DiskName = "Packer-disk"
+	}
+
 	if self.config.DiskSize == 0 {
 		self.config.DiskSize = 40000
 	}
