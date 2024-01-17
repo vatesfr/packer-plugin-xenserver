@@ -13,6 +13,7 @@ type StepSetVmHostSshAddress struct{}
 func (self *StepSetVmHostSshAddress) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
 	c := state.Get("client").(*Connection)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	ui.Say("Step: Set SSH address to VM host IP")
@@ -36,6 +37,9 @@ func (self *StepSetVmHostSshAddress) Run(ctx context.Context, state multistep.St
 
 	state.Put("ssh_address", address)
 	ui.Say(fmt.Sprintf("Set host SSH address to '%s'.", address))
+
+	state.Put("ssh_port", config.HostSshPort)
+	ui.Say(fmt.Sprintf("Set host SSH port to %d.", config.HostSshPort))
 
 	return multistep.ActionContinue
 }

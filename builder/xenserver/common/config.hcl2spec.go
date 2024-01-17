@@ -21,6 +21,7 @@ type FlatConfig struct {
 	Username                  *string           `mapstructure:"remote_username" cty:"remote_username" hcl:"remote_username"`
 	Password                  *string           `mapstructure:"remote_password" cty:"remote_password" hcl:"remote_password"`
 	HostIp                    *string           `mapstructure:"remote_host" cty:"remote_host" hcl:"remote_host"`
+	HostSshPort               *uint             `mapstructure:"remote_ssh_port" cty:"remote_ssh_port" hcl:"remote_ssh_port"`
 	VMName                    *string           `mapstructure:"vm_name" cty:"vm_name" hcl:"vm_name"`
 	VMDescription             *string           `mapstructure:"vm_description" cty:"vm_description" hcl:"vm_description"`
 	SrName                    *string           `mapstructure:"sr_name" cty:"sr_name" hcl:"sr_name"`
@@ -136,6 +137,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"remote_username":              &hcldec.AttrSpec{Name: "remote_username", Type: cty.String, Required: false},
 		"remote_password":              &hcldec.AttrSpec{Name: "remote_password", Type: cty.String, Required: false},
 		"remote_host":                  &hcldec.AttrSpec{Name: "remote_host", Type: cty.String, Required: false},
+		"remote_ssh_port":              &hcldec.AttrSpec{Name: "remote_ssh_port", Type: cty.Number, Required: false},
 		"vm_name":                      &hcldec.AttrSpec{Name: "vm_name", Type: cty.String, Required: false},
 		"vm_description":               &hcldec.AttrSpec{Name: "vm_description", Type: cty.String, Required: false},
 		"sr_name":                      &hcldec.AttrSpec{Name: "sr_name", Type: cty.String, Required: false},
