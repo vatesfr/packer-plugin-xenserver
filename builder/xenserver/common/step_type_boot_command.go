@@ -32,8 +32,8 @@ type StepTypeBootCommand struct {
 	Ctx interpolate.Context
 }
 
-func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("commonconfig").(CommonConfig)
+func (step *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 	httpPort := state.Get("http_port").(int)
@@ -74,7 +74,8 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	}
 	locationPieces := strings.SplitAfter(location, "/")
 	consoleHost := strings.TrimSuffix(locationPieces[2], "/")
-	ui.Say(fmt.Sprintf("Connecting to the VM console VNC over xapi via %s", consoleHost))
+	ui.Say("Connecting to VNC over XAPI...")
+	log.Printf("Connecting to host: %s", consoleHost)
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:443", consoleHost))
 
 	if err != nil {
@@ -95,7 +96,7 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	httpReq := fmt.Sprintf("CONNECT %s HTTP/1.0\r\nHost: %s\r\nCookie: session_id=%s\r\n\r\n", consoleLocation, consoleHost, c.session)
 	fmt.Printf("Sending the follow http req: %v", httpReq)
 
-	ui.Say(fmt.Sprintf("Making HTTP request to initiate VNC connection: %s", httpReq))
+	ui.Message(fmt.Sprintf("Making HTTP request to initiate VNC connection: %s", httpReq))
 	_, err = io.WriteString(tlsConn, httpReq)
 
 	if err != nil {
@@ -114,9 +115,9 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		return multistep.ActionHalt
 	}
 
-	ui.Say(fmt.Sprintf("Received response: %s", string(buffer)))
+	ui.Message(fmt.Sprintf("Received response: %s", string(buffer)))
 
-	vncClient, err := vnc.Client(tlsConn, &vnc.ClientConfig{Exclusive: true})
+	vncClient, err := vnc.Client(tlsConn, &vnc.ClientConfig{Exclusive: !config.PackerDebug})
 
 	if err != nil {
 		err := fmt.Errorf("Error establishing VNC session: %s", err)
@@ -142,7 +143,7 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	localIp := strings.Split(envVar, " ")[0]
 	ui.Message(fmt.Sprintf("Found local IP: %s", localIp))
 
-	self.Ctx.Data = &bootCommandTemplateData{
+	step.Ctx.Data = &bootCommandTemplateData{
 		config.VMName,
 		localIp,
 		uint(httpPort),
@@ -151,7 +152,7 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	ui.Say("Typing boot commands over VNC...")
 	for _, command := range config.BootCommand {
 
-		command, err := interpolate.Render(command, &self.Ctx)
+		command, err := interpolate.Render(command, &step.Ctx)
 		if err != nil {
 			err := fmt.Errorf("Error preparing boot command: %s", err)
 			state.Put("error", err)
@@ -167,12 +168,10 @@ func (self *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		vncSendString(vncClient, command)
 	}
 
-	ui.Say("Finished typing.")
-
 	return multistep.ActionContinue
 }
 
-func (self *StepTypeBootCommand) Cleanup(multistep.StateBag) {}
+func (step *StepTypeBootCommand) Cleanup(multistep.StateBag) {}
 
 // Taken from qemu's builder plugin - not an exported function.
 func vncSendString(c *vnc.ClientConn, original string) {
