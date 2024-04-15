@@ -3,6 +3,8 @@ package common
 import (
 	"context"
 	"fmt"
+	"net"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
@@ -47,6 +49,24 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 
 			}
 
+			ping := func(address string) bool {
+				protocol := "ip4:icmp"
+				if strings.Contains(address, ":") {
+					protocol = "ip6:icmp"
+				}
+				_, err = net.DialTimeout(protocol, address, time.Second*2)
+				return err == nil
+			}
+
+			trynetwork := func(network string, address string) bool {
+				if address != "" && ping(address) {
+					ui.Message(fmt.Sprintf("Got IP '%s' (%s) from XenServer tools.", address, network))
+					return true
+				}
+				ui.Message(fmt.Sprintf("Got IP '%s' (%s) from XenServer tools. Not accessible.", address, network))
+				return false
+			}
+
 			if config.IPGetter == "auto" || config.IPGetter == "tools" {
 
 				// Look for PV IP
@@ -62,9 +82,16 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 					networks := metrics.Networks
 					var ok bool
 					if ip, ok = networks["0/ip"]; ok {
-						if ip != "" {
-							ui.Message(fmt.Sprintf("Got IP '%s' from XenServer tools", ip))
+						if trynetwork("0/ip", ip) {
 							return true, nil
+						}
+					}
+					for _, protocol := range []string{"ipv4", "ipv6"} {
+						for network, address := range networks {
+							if strings.Contains(network, protocol) && trynetwork(network, address) {
+								ip = address
+								return true, nil
+							}
 						}
 					}
 				}
