@@ -6,9 +6,9 @@ import (
 
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/iso"
 	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/xva"
+	"github.com/xenserver/packer-builder-xenserver/version"
 
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
-	"github.com/hashicorp/packer-plugin-sdk/version"
 )
 
 func main() {
