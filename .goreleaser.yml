@@ -1,3 +1,4 @@
+version: 2
 # This is an example goreleaser.yaml file with some sane defaults.
 # Make sure to check the documentation at http://goreleaser.com
 env:
@@ -70,4 +71,4 @@ release:
   draft: false
 
 changelog:
-  skip: true
+  disable: true
