@@ -83,6 +83,16 @@ each category, the available options are alphabetized and described.
   five seconds and one minute 30 seconds, respectively. If this isn't specified,
   the default is 10 seconds.
 
+* `cd_files` (array of strings) - A list of files to place onto a CD
+  that is attached when the VM is booted. This is most useful
+  for unattended Windows installs, which look for an `Autounattend.xml` file
+  on removable media. By default, no CD will be attached. All files
+  listed in this setting get placed into the root directory of the CD
+  and the CD is attached as the first CD device. Currently, no
+  support exists for creating sub-directories on the CD. Wildcard
+  characters (\*, ?, and []) are allowed. Directory names are also allowed,
+  which will add all the files found in the directory to the CD.
+
 * `clone_template` (string) - The template to clone. Defaults to "Other install
   media", this is "other", but you can get _dramatic_ performance improvements
   by setting this to the proper value. To view all available values for this
