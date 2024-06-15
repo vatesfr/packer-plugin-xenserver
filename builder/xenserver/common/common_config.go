@@ -22,6 +22,7 @@ type CommonConfig struct {
 	VMDescription      string   `mapstructure:"vm_description"`
 	SrName             string   `mapstructure:"sr_name"`
 	SrISOName          string   `mapstructure:"sr_iso_name" required:"false"`
+	CDFiles            []string `mapstructure:"cd_files"`
 	FloppyFiles        []string `mapstructure:"floppy_files"`
 	NetworkNames       []string `mapstructure:"network_names"`
 	ExportNetworkNames []string `mapstructure:"export_network_names"`
