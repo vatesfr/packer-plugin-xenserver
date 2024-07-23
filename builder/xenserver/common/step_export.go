@@ -224,12 +224,14 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 			}
 
 			var disk_export_url string
+			var disk_export_url_masked string
 
 			// @todo: check for 6.5 SP1
 			if xs_version <= "6.5.0" && config.Format == "vdi_vhd" {
 				// Export the VHD using a Transfer VM
 
 				disk_export_url, err = Expose(c, disk, "vhd")
+				disk_export_url_masked = disk_export_url
 
 				if err != nil {
 					ui.Error(fmt.Sprintf("Failed to expose disk %s: %s", disk_uuid, err.Error()))
@@ -249,11 +251,17 @@ func (StepExport) Run(ctx context.Context, state multistep.StateBag) multistep.S
 					disk_uuid,
 					extrauri)
 
+				disk_export_url_masked = fmt.Sprintf("https://%s:%s@%s/export_raw_vdi?vdi=%s%s",
+					c.Username,
+					"********",
+					c.Host,
+					disk_uuid,
+					extrauri)
 			}
 
 			disk_export_filename := fmt.Sprintf("%s/%s%s", config.OutputDir, disk_uuid, suffix)
 
-			ui.Say("Getting VDI " + disk_export_url)
+			ui.Say("Getting VDI " + disk_export_url_masked)
 			err = downloadFile(disk_export_url, disk_export_filename, ui)
 			if err != nil {
 				ui.Error(fmt.Sprintf("Could not download VDI: %s", err.Error()))
