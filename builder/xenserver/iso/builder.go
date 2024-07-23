@@ -119,7 +119,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 	if self.config.ISOName == "" {
 		// If ISO name is not specified, assume a URL and checksum has been provided.
-		self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
+		// If checksum is provided and starts with file:, do not change to lower case
+		if !strings.HasPrefix(strings.ToLower(self.config.ISOChecksum), "file:") {
+			self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
+		}
 
 		if len(self.config.ISOUrls) == 0 {
 			if self.config.ISOUrl == "" {
