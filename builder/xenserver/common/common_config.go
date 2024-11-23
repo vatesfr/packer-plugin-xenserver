@@ -35,6 +35,8 @@ type CommonConfig struct {
 
 	RawBootWait string `mapstructure:"boot_wait"`
 	BootWait    time.Duration
+	RawDhcpWait string `mapstructure:"dhcp_wait"`
+	DhcpWait    time.Duration
 
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
 
@@ -79,6 +81,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	if c.RawBootWait == "" {
 		c.RawBootWait = "5s"
+	}
+
+	if c.RawDhcpWait == "" {
+		c.RawDhcpWait = "500ms"
 	}
 
 	if c.HTTPPortMin == 0 {
@@ -160,6 +166,11 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	c.BootWait, err = time.ParseDuration(c.RawBootWait)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("Failed to parse boot_wait: %s", err))
+	}
+
+	c.DhcpWait, err = time.ParseDuration(c.RawDhcpWait)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("Failed to parse dhcp_wait: %s", err))
 	}
 
 	if c.SSHKeyPath != "" {

@@ -3,7 +3,6 @@ package xva
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
@@ -161,7 +160,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		&xscommon.StepWaitForIP{
 			Chan:    httpReqChan,
-			Timeout: 300 * time.Minute, /*self.config.InstallTimeout*/ // @todo change this
+			Timeout: self.config.InstallTimeout,
 		},
 		&xscommon.StepForwardPortOverSSH{
 			RemotePort:  xscommon.InstanceSSHPort,
