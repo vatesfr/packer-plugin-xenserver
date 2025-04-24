@@ -1,12 +1,12 @@
-# XenServer packer.io builder
+# XCP-ng packer.io builder
 
-This builder plugin extends packer.io to support building images for XenServer. 
+This builder plugin extends packer.io to support building images for XCP-ng.
 
 This is a fork of the original builder since the original project was abandoned and no longer compiled with recent versions of Go or worked with Xenserver 7.6 and later.
 
 It improves the original project in the following ways:
-1. Developed alongside the [Xenorchestra terraform provider](https://github.com/ddelnano/terraform-provider-xenorchestra) to ensure the hashicorp ecosystem is interoperable.
-2. Reimplements how the boot commands are sent over VNC to be compatible with later versions of Xenserver (Citrix hypervisor) and XCP
+1. Developed alongside the [Xenorchestra terraform provider](https://github.com/vatesfr/terraform-provider-xenorchestra) to ensure the hashicorp ecosystem is interoperable.
+2. Reimplements how the boot commands are sent over VNC to be compatible with later versions of Xenserver (Citrix hypervisor) and XCP-ng
 
 ## Status
 
@@ -26,7 +26,7 @@ packer {
   required_plugins {
    xenserver= {
       version = ">= v0.6.0"
-      source = "github.com/ddelnano/xenserver"
+      source = "github.com/vatesfr/packer-plugin-xenserver"
     }
   }
 }
@@ -38,13 +38,13 @@ The following command will install the packer plugin using the Ubuntu example pr
 packer init examples/ubuntu/ubuntu-2004.pkr.hcl
 ```
 
-If you are using an older version of packer or are still using json templates you will need to download the relevant release from the project's [releases page](https://github.com/ddelnano/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugins/packer-builder-xenserver-iso`.
+If you are using an older version of packer or are still using json templates you will need to download the relevant release from the project's [releases page](https://github.com/vatesfr/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugins/packer-builder-xenserver-iso`.
 
 ## Developing the builder
 
 ### Dependencies
 * Packer >= v1.7.1 (https://packer.io)
-* XenServer / Citrix Hypervisor > 7.6
+* XCP-ng / Citrix Hypervisor > 7.6
 * Golang 1.20
 
 ## Compile the plugin
