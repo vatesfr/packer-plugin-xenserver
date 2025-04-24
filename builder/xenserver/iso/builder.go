@@ -195,12 +195,28 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Force: self.config.PackerForce,
 			Path:  self.config.OutputDir,
 		},
+		&commonsteps.StepCreateCD{
+			Files: self.config.CDFiles,
+			Label: "cidata",
+		},
 		&commonsteps.StepCreateFloppy{
 			Files: self.config.FloppyFiles,
 			Label: "cidata",
 		},
 		&xscommon.StepHTTPServer{
 			Chan: httpReqChan,
+		},
+		&xscommon.StepUploadVdi{
+			VdiNameFunc: func() string {
+				return "Packer-CD"
+			},
+			ImagePathFunc: func() string {
+				if cdPath, ok := state.GetOk("cd_path"); ok {
+					return cdPath.(string)
+				}
+				return ""
+			},
+			VdiUuidKey: "cd_vdi_uuid",
 		},
 		&xscommon.StepUploadVdi{
 			VdiNameFunc: func() string {
@@ -258,6 +274,10 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.VbdTypeCD,
 		},
+		&xscommon.StepAttachVdi{
+			VdiUuidKey: "cd_vdi_uuid",
+			VdiType:    xsclient.VbdTypeCD,
+		},
 		new(xscommon.StepStartVmPaused),
 		new(xscommon.StepSetVmHostSshAddress),
 		// &xscommon.StepForwardPortOverSSH{
@@ -306,6 +326,9 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
+		},
+		&xscommon.StepDetachVdi{
+			VdiUuidKey: "cd_vdi_uuid",
 		},
 		&xscommon.StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
