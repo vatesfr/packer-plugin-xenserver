@@ -52,7 +52,6 @@ func (step *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	}
 
 	vmRef, err := c.client.VM.GetByUUID(c.session, instance_uuid)
-
 	if err != nil {
 		state.Put("error", err)
 		ui.Error(err.Error())
