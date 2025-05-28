@@ -59,10 +59,6 @@ func (step *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		return multistep.ActionHalt
 	}
 
-	if len(vmRef) != 1 {
-		ui.Error(fmt.Sprintf("expected to find a single VM, instead found '%d'. Ensure the VM name is unique", len(vmRef)))
-	}
-
 	consoles, err := c.client.VM.GetConsoles(c.session, vmRef)
 	if err != nil {
 		state.Put("error", err)
