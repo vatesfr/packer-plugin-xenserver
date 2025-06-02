@@ -38,6 +38,20 @@ The following command will install the packer plugin using the Ubuntu example pr
 packer init examples/ubuntu/ubuntu-2004.pkr.hcl
 ```
 
+### Replacing Existing Templates
+
+The builder supports the usage of the Packer [`-force`](https://developer.hashicorp.com/packer/docs/commands/build#force) flag to clean up templates with the **same name** as your current build. If you want to continously update a single "golden image", using the `-force` flag will let you achieve that.
+
+Alternatively, if you omit the `-force` flag, a new template will always be created. (Provided you elected to create one with the [`skip_set_template`](docs/builders/iso/xenserver-iso.html.markdown#L158-L159) parameter.)
+
+Examples:
+
+```hcl
+source "xenserver-iso" "ubuntu-2404" {
+  # If '-force' is used, all templates with the same name as below will be *REMOVED*.
+  vm_name        = "Ubuntu 24.04 LTS"
+```
+
 ## Developing the builder
 
 ### Dependencies
