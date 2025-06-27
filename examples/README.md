@@ -25,7 +25,7 @@ so for example:
 
 ### Ubuntu
 
-The Ubuntu example uses the [autoinstall tool](https://ubuntu.com/server/docs/install/autoinstallhttps://ubuntu.com/server/docs/install/autoinstall) to configure the VM template. Please see the [autoinstall docs](https://ubuntu.com/server/docs/install/autoinstall-reference) for an exhaustive list of what is supported.
+The Ubuntu example uses the [autoinstall tool](https://ubuntu.com/server/docs/install/autoinstall) to configure the VM template. Please see the [autoinstall docs](https://ubuntu.com/server/docs/install/autoinstall-reference) for an exhaustive list of what is supported.
 
 Packer will create a http server to serve the files as specified from the `http_directory` specified in the builder configuration. This is where the [user-data](http/ubuntu-2004/user-data) and [meta-data](http/ubuntu-2004/meta-data) for autoinstall must be present.
 
