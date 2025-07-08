@@ -1,15 +1,15 @@
 module github.com/xenserver/packer-builder-xenserver
 
-go 1.20
+go 1.23.0
 
 require (
 	github.com/amfranz/go-xmlrpc-client v0.0.0-20190612172737-76858463955d
-	github.com/hashicorp/hcl/v2 v2.20.1
+	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/packer-plugin-sdk v0.3.0
 	github.com/mitchellh/go-vnc v0.0.0-20150629162542-723ed9867aed
 	github.com/terra-farm/go-xen-api-client v0.0.2
-	github.com/zclconf/go-cty v1.14.4
-	golang.org/x/crypto v0.24.0
+	github.com/zclconf/go-cty v1.16.3
+	golang.org/x/crypto v0.38.0
 )
 
 require (
@@ -84,10 +84,10 @@ require (
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.21.0 // indirect
-	golang.org/x/term v0.21.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
+	golang.org/x/term v0.32.0 // indirect
+	golang.org/x/text v0.25.0 // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	golang.org/x/tools v0.21.1-0.20240508182429-e35e4ccd0d2d // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
