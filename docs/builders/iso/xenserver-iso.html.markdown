@@ -299,8 +299,29 @@ will be replaced by the proper key:
 
 * `<pageUp>` `<pageDown>` - Simulates pressing the page up and page down keys.
 
+* `<leftAlt> <rightAlt>` - Simulates pressing the alt key.
+
+* `<leftCtrl> <rightCtrl>` - Simulates pressing the ctrl key.
+
+* `<leftShift> <rightShift>` - Simulates pressing the shift key.
+
+* `<leftSuper> <rightSuper>` - Simulates pressing the ⌘ or Windows key.
+
 * `<wait>` `<wait5>` `<wait10>` - Adds a 1, 5 or 10 second pause before sending any additional keys. This
   is useful if you have to generally wait for the UI to update before typing more.
+
+* `<waitXX>` - Add an arbitrary pause before sending any additional keys.
+  The format of `XX` is a sequence of positive decimal numbers, each with
+  optional fraction and a unit suffix, such as `300ms`, `1.5h` or `2h45m`.
+  Valid time units are `ns`, `us` (or `µs`), `ms`, `s`, `m`, `h`. For
+  example `<wait10m>` or `<wait1m20s>`.
+
+* `<XXXOn> <XXXOff>` - Any printable keyboard character, and of these
+  "special" expressions, with the exception of the `<wait>` types, can
+  also be toggled on or off. For example, to simulate ctrl+c, use
+  `<leftCtrlOn>c<leftCtrlOff>`. Be sure to release them, otherwise they
+  will be held down until the machine reboots. To hold the `c` key down,
+  you would use `<cOn>`. Likewise, `<cOff>` to release.
 
 In addition to the special keys, each command to type is treated as a
 configuration template.

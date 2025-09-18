@@ -11,16 +11,15 @@ import (
 	"net"
 	"strings"
 	"time"
-	"unicode"
-	"unicode/utf8"
 
+	"github.com/hashicorp/packer-plugin-sdk/bootcommand"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/mitchellh/go-vnc"
 )
 
-const KeyLeftShift uint = 0xFFE1
+const KeyLeftShift uint32 = 0xFFE1
 
 type bootCommandTemplateData struct {
 	Name     string
@@ -149,9 +148,13 @@ func (step *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		uint(httpPort),
 	}
 
+	d := bootcommand.NewVNCDriver(vncClient, time.Second/10)
+
 	ui.Say("Typing boot commands over VNC...")
 	for _, command := range config.BootCommand {
-
+		if len(command) == 0 {
+			continue
+		}
 		command, err := interpolate.Render(command, &step.Ctx)
 		if err != nil {
 			err := fmt.Errorf("Error preparing boot command: %s", err)
@@ -160,112 +163,24 @@ func (step *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 			return multistep.ActionHalt
 		}
 
-		// Check for interrupts
-		if _, ok := state.GetOk(multistep.StateCancelled); ok {
+		seq, err := bootcommand.GenerateExpressionSequence(command)
+		if err != nil {
+			err := fmt.Errorf("Error generating boot command: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
 			return multistep.ActionHalt
 		}
 
-		vncSendString(vncClient, command)
+		if err := seq.Do(ctx, d); err != nil {
+			err := fmt.Errorf("Error running boot command: %s", err)
+			state.Put("error", err)
+			ui.Error(err.Error())
+			return multistep.ActionHalt
+		}
+
 	}
 
 	return multistep.ActionContinue
 }
 
 func (step *StepTypeBootCommand) Cleanup(multistep.StateBag) {}
-
-// Taken from qemu's builder plugin - not an exported function.
-func vncSendString(c *vnc.ClientConn, original string) {
-	// Scancodes reference: https://github.com/qemu/qemu/blob/master/ui/vnc_keysym.h
-	special := make(map[string]uint32)
-	special["<bs>"] = 0xFF08
-	special["<del>"] = 0xFFFF
-	special["<enter>"] = 0xFF0D
-	special["<esc>"] = 0xFF1B
-	special["<f1>"] = 0xFFBE
-	special["<f2>"] = 0xFFBF
-	special["<f3>"] = 0xFFC0
-	special["<f4>"] = 0xFFC1
-	special["<f5>"] = 0xFFC2
-	special["<f6>"] = 0xFFC3
-	special["<f7>"] = 0xFFC4
-	special["<f8>"] = 0xFFC5
-	special["<f9>"] = 0xFFC6
-	special["<f10>"] = 0xFFC7
-	special["<f11>"] = 0xFFC8
-	special["<f12>"] = 0xFFC9
-	special["<return>"] = 0xFF0D
-	special["<tab>"] = 0xFF09
-	special["<up>"] = 0xFF52
-	special["<down>"] = 0xFF54
-	special["<left>"] = 0xFF51
-	special["<right>"] = 0xFF53
-	special["<spacebar>"] = 0x020
-	special["<insert>"] = 0xFF63
-	special["<home>"] = 0xFF50
-	special["<end>"] = 0xFF57
-	special["<pageUp>"] = 0xFF55
-	special["<pageDown>"] = 0xFF56
-
-	shiftedChars := "~!@#$%^&*()_+{}|:\"<>?"
-
-	// TODO(mitchellh): Ripe for optimizations of some point, perhaps.
-	for len(original) > 0 {
-		var keyCode uint32
-		keyShift := false
-
-		if strings.HasPrefix(original, "<wait>") {
-			log.Printf("Special code '<wait>' found, sleeping one second")
-			time.Sleep(1 * time.Second)
-			original = original[len("<wait>"):]
-			continue
-		}
-
-		if strings.HasPrefix(original, "<wait5>") {
-			log.Printf("Special code '<wait5>' found, sleeping 5 seconds")
-			time.Sleep(5 * time.Second)
-			original = original[len("<wait5>"):]
-			continue
-		}
-
-		if strings.HasPrefix(original, "<wait10>") {
-			log.Printf("Special code '<wait10>' found, sleeping 10 seconds")
-			time.Sleep(10 * time.Second)
-			original = original[len("<wait10>"):]
-			continue
-		}
-
-		for specialCode, specialValue := range special {
-			if strings.HasPrefix(original, specialCode) {
-				log.Printf("Special code '%s' found, replacing with: %d", specialCode, specialValue)
-				keyCode = specialValue
-				original = original[len(specialCode):]
-				break
-			}
-		}
-
-		if keyCode == 0 {
-			r, size := utf8.DecodeRuneInString(original)
-			original = original[size:]
-			keyCode = uint32(r)
-			keyShift = unicode.IsUpper(r) || strings.ContainsRune(shiftedChars, r)
-
-			log.Printf("Sending char '%c', code %d, shift %v", r, keyCode, keyShift)
-		}
-
-		if keyShift {
-			c.KeyEvent(uint32(KeyLeftShift), true)
-		}
-
-		c.KeyEvent(keyCode, true)
-		time.Sleep(time.Second / 10)
-		c.KeyEvent(keyCode, false)
-		time.Sleep(time.Second / 10)
-
-		if keyShift {
-			c.KeyEvent(uint32(KeyLeftShift), false)
-		}
-
-		// no matter what, wait a small period
-		time.Sleep(50 * time.Millisecond)
-	}
-}
