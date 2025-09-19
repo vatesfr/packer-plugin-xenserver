@@ -29,46 +29,63 @@ func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) mu
 		return multistep.ActionHalt
 	}
 
+	go func(c Connection, ui packer.Ui, config CommonConfig) {
+		state.Put("instance_ssh_address", "")
+		var ip string
+
+		for true {
+			time.Sleep(500 * time.Millisecond)
+
+			if config.IPGetter == "auto" || config.IPGetter == "http" {
+				// Snoop IP from HTTP fetch
+				select {
+				case new_ip := <-self.Chan:
+					if ip != new_ip {
+						ip = new_ip
+						ui.Message(fmt.Sprintf("Got IP '%s' from HTTP request", ip))
+						state.Put("instance_ssh_address", ip)
+					}
+				default:
+				}
+			}
+
+			if config.IPGetter == "auto" || config.IPGetter == "tools" {
+				// Look for PV IP
+				m, err := c.client.VM.GetGuestMetrics(c.session, instance)
+				if err != nil {
+					continue
+				}
+				if m != "" {
+					metrics, err := c.client.VMGuestMetrics.GetRecord(c.session, m)
+					if err != nil {
+						continue
+					}
+					networks := metrics.Networks
+					if new_ip, ok := networks["0/ip"]; ok {
+						if new_ip != "" && ip != new_ip {
+							ip = new_ip
+							ui.Message(fmt.Sprintf("Got IP '%s' from XenServer tools", ip))
+							state.Put("instance_ssh_address", ip)
+						}
+					}
+				}
+
+			}
+		}
+	}(*c, ui, config)
+
+	time.Sleep(config.DhcpWait)
+
 	var ip string
+
 	err = InterruptibleWait{
 		Timeout:           self.Timeout,
 		PredicateInterval: 5 * time.Second,
 		Predicate: func() (result bool, err error) {
 
-			if config.IPGetter == "auto" || config.IPGetter == "http" {
-
-				// Snoop IP from HTTP fetch
-				select {
-				case ip = <-self.Chan:
-					ui.Message(fmt.Sprintf("Got IP '%s' from HTTP request", ip))
-					return true, nil
-				default:
-				}
-
-			}
-
-			if config.IPGetter == "auto" || config.IPGetter == "tools" {
-
-				// Look for PV IP
-				m, err := c.client.VM.GetGuestMetrics(c.session, instance)
-				if err != nil {
-					return false, err
-				}
-				if m != "" {
-					metrics, err := c.client.VMGuestMetrics.GetRecord(c.session, m)
-					if err != nil {
-						return false, err
-					}
-					networks := metrics.Networks
-					var ok bool
-					if ip, ok = networks["0/ip"]; ok {
-						if ip != "" {
-							ui.Message(fmt.Sprintf("Got IP '%s' from XenServer tools", ip))
-							return true, nil
-						}
-					}
-				}
-
+			var ok bool
+			if ip, ok = state.Get("instance_ssh_address").(string); ok && ip != "" {
+				return true, nil
 			}
 
 			return false, nil
