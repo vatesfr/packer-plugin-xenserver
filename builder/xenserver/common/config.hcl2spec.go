@@ -36,6 +36,7 @@ type FlatConfig struct {
 	BootCommand               []string          `mapstructure:"boot_command" cty:"boot_command" hcl:"boot_command"`
 	ShutdownCommand           *string           `mapstructure:"shutdown_command" cty:"shutdown_command" hcl:"shutdown_command"`
 	RawBootWait               *string           `mapstructure:"boot_wait" cty:"boot_wait" hcl:"boot_wait"`
+	RawDhcpWait               *string           `mapstructure:"dhcp_wait" cty:"dhcp_wait" hcl:"dhcp_wait"`
 	ToolsIsoName              *string           `mapstructure:"tools_iso_name" cty:"tools_iso_name" hcl:"tools_iso_name"`
 	HTTPDir                   *string           `mapstructure:"http_directory" cty:"http_directory" hcl:"http_directory"`
 	HTTPPortMin               *uint             `mapstructure:"http_port_min" cty:"http_port_min" hcl:"http_port_min"`
@@ -153,6 +154,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"boot_command":                 &hcldec.AttrSpec{Name: "boot_command", Type: cty.List(cty.String), Required: false},
 		"shutdown_command":             &hcldec.AttrSpec{Name: "shutdown_command", Type: cty.String, Required: false},
 		"boot_wait":                    &hcldec.AttrSpec{Name: "boot_wait", Type: cty.String, Required: false},
+		"dhcp_wait":                    &hcldec.AttrSpec{Name: "dhcp_wait", Type: cty.String, Required: false},
 		"tools_iso_name":               &hcldec.AttrSpec{Name: "tools_iso_name", Type: cty.String, Required: false},
 		"http_directory":               &hcldec.AttrSpec{Name: "http_directory", Type: cty.String, Required: false},
 		"http_port_min":                &hcldec.AttrSpec{Name: "http_port_min", Type: cty.Number, Required: false},
