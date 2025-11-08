@@ -18,7 +18,7 @@ type StepWaitForIP struct {
 func (self *StepWaitForIP) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("config").(Config)
 
 	ui.Say("Step: Wait for VM's IP to become known to us.")
 

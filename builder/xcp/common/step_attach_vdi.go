@@ -56,7 +56,7 @@ func (self *StepAttachVdi) Run(ctx context.Context, state multistep.StateBag) mu
 }
 
 func (self *StepAttachVdi) Cleanup(state multistep.StateBag) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("config").(Config)
 	c := state.Get("client").(*Connection)
 	if config.ShouldKeepVM(state) {
 		return

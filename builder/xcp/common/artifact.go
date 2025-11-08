@@ -8,7 +8,7 @@ import (
 )
 
 // This is the common builder ID to all of these artifacts.
-const BuilderId = "packer.xenserver"
+const BuilderId = "packer.xcp"
 
 type LocalArtifact struct {
 	dir string

@@ -4,17 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/iso"
-	"github.com/xenserver/packer-builder-xenserver/builder/xenserver/xva"
-	"github.com/xenserver/packer-builder-xenserver/version"
+	"github.com/disruptivemindseu/packer-plugin-xcp/builder/xcp/common"
+	"github.com/disruptivemindseu/packer-plugin-xcp/version"
 
 	"github.com/hashicorp/packer-plugin-sdk/plugin"
 )
 
 func main() {
 	pps := plugin.NewSet()
-	pps.RegisterBuilder("iso", new(iso.Builder))
-	pps.RegisterBuilder("xva", new(xva.Builder))
+	pps.RegisterBuilder("iso", new(common.Builder))
 	pps.SetVersion(version.PluginVersion)
 	err := pps.Run()
 	if err != nil {

@@ -19,7 +19,7 @@ type StepUploadVdi struct {
 }
 
 func (self *StepUploadVdi) uploadVdi(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 
@@ -99,7 +99,7 @@ func (self *StepUploadVdi) Run(ctx context.Context, state multistep.StateBag) mu
 }
 
 func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 

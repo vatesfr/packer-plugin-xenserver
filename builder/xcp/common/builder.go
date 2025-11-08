@@ -1,4 +1,4 @@
-package iso
+package common
 
 import (
 	"context"
@@ -16,11 +16,10 @@ import (
 	hconfig "github.com/hashicorp/packer-plugin-sdk/template/config"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xsclient "github.com/terra-farm/go-xen-api-client"
-	xscommon "github.com/xenserver/packer-builder-xenserver/builder/xenserver/common"
 )
 
 type Builder struct {
-	config xscommon.Config
+	config Config
 	runner multistep.Runner
 }
 
@@ -44,7 +43,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}
 
 	errs = packer.MultiErrorAppend(
-		errs, self.config.CommonConfig.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
+		errs, self.config.Prepare(self.config.GetInterpContext(), &self.config.PackerConfig)...)
 	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(self.config.GetInterpContext())...)
 
 	// Set default values
@@ -162,7 +161,7 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 }
 
 func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (packer.Artifact, error) {
-	c, err := xscommon.NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
+	c, err := NewXenAPIClient(self.config.HostIp, self.config.Username, self.config.Password)
 
 	if err != nil {
 		return nil, err
@@ -175,7 +174,6 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 	state := new(multistep.BasicStateBag)
 	state.Put("client", c)
 	state.Put("config", self.config)
-	state.Put("commonconfig", self.config.CommonConfig)
 	state.Put("hook", hook)
 	state.Put("ui", ui)
 
@@ -191,7 +189,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		},
 	}
 	steps := []multistep.Step{
-		&xscommon.StepPrepareOutputDir{
+		&StepPrepareOutputDir{
 			Force: self.config.PackerForce,
 			Path:  self.config.OutputDir,
 		},
@@ -203,10 +201,14 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			Files: self.config.FloppyFiles,
 			Label: "cidata",
 		},
-		&xscommon.StepHTTPServer{
+		&StepHTTPServer{
 			Chan: httpReqChan,
 		},
-		&xscommon.StepUploadVdi{
+		&StepFindVdi{
+			VdiName:    self.config.ISOName,
+			VdiUuidKey: "isoname_vdi_uuid",
+		},
+		&StepUploadVdi{
 			VdiNameFunc: func() string {
 				return "Packer-CD"
 			},
@@ -218,7 +220,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			},
 			VdiUuidKey: "cd_vdi_uuid",
 		},
-		&xscommon.StepUploadVdi{
+		&StepUploadVdi{
 			VdiNameFunc: func() string {
 				return "Packer-floppy-disk"
 			},
@@ -230,110 +232,97 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			},
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
-		&xscommon.StepFindOrUploadVdi{
-			xscommon.StepUploadVdi{
-				VdiNameFunc: func() string {
-					if len(self.config.ISOUrls) > 0 {
-						return path.Base(self.config.ISOUrls[0])
-					}
-					return ""
-				},
-				ImagePathFunc: func() string {
-					if isoPath, ok := state.GetOk("iso_path"); ok {
-						return isoPath.(string)
-					}
-					return ""
-				},
-				VdiUuidKey: "iso_vdi_uuid",
+		&StepUploadVdi{
+			VdiNameFunc: func() string {
+				if len(self.config.ISOUrls) > 0 {
+					return path.Base(self.config.ISOUrls[0])
+				}
+				return ""
 			},
+			ImagePathFunc: func() string {
+				if isoPath, ok := state.GetOk("iso_path"); ok {
+					return isoPath.(string)
+				}
+				return ""
+			},
+			VdiUuidKey: "iso_vdi_uuid",
 		},
-		&xscommon.StepFindVdi{
+		&StepFindVdi{
 			VdiName:    self.config.ToolsIsoName,
 			VdiUuidKey: "tools_vdi_uuid",
 		},
-		&xscommon.StepFindVdi{
-			VdiName:    self.config.ISOName,
-			VdiUuidKey: "isoname_vdi_uuid",
-		},
-		&xscommon.StepCreateInstance{
+		&StepCreateInstance{
 			AssumePreInstalledOS: false,
 		},
-		&xscommon.StepAttachVdi{
+		&StepAttachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 			VdiType:    xsclient.VbdTypeFloppy,
 		},
-		&xscommon.StepAttachVdi{
+		&StepAttachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
 			VdiType:    xsclient.VbdTypeCD,
 		},
-		&xscommon.StepAttachVdi{
+		&StepAttachVdi{
 			VdiUuidKey: "isoname_vdi_uuid",
 			VdiType:    xsclient.VbdTypeCD,
 		},
-		&xscommon.StepAttachVdi{
+		&StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.VbdTypeCD,
 		},
-		&xscommon.StepAttachVdi{
+		&StepAttachVdi{
 			VdiUuidKey: "cd_vdi_uuid",
 			VdiType:    xsclient.VbdTypeCD,
 		},
-		new(xscommon.StepStartVmPaused),
-		new(xscommon.StepSetVmHostSshAddress),
-		// &xscommon.StepForwardPortOverSSH{
-		// 	RemotePort:  xscommon.InstanceVNCPort,
-		// 	RemoteDest:  xscommon.InstanceVNCIP,
-		// 	HostPortMin: self.config.HostPortMin,
-		// 	HostPortMax: self.config.HostPortMax,
-		// 	ResultKey:   "local_vnc_port",
-		// },
-		new(xscommon.StepBootWait),
-		&xscommon.StepTypeBootCommand{
+		new(StepStartVmPaused),
+		new(StepSetVmHostSshAddress),
+		new(StepBootWait),
+		&StepTypeBootCommand{
 			Ctx: *self.config.GetInterpContext(),
 		},
-		&xscommon.StepWaitForIP{
+		&StepWaitForIP{
 			Chan:    httpReqChan,
 			Timeout: self.config.InstallTimeout, // @todo change this
 		},
-		&xscommon.StepForwardPortOverSSH{
-			RemotePort:  xscommon.InstanceSSHPort,
-			RemoteDest:  xscommon.InstanceSSHIP,
+		&StepForwardPortOverSSH{
+			RemotePort:  InstanceSSHPort,
+			RemoteDest:  InstanceSSHIP,
 			HostPortMin: self.config.HostPortMin,
 			HostPortMax: self.config.HostPortMax,
 			ResultKey:   "local_ssh_port",
 		},
 		&communicator.StepConnect{
 			Config:    &self.config.SSHConfig.Comm,
-			Host:      xscommon.InstanceSSHIP,
+			Host:      InstanceSSHIP,
 			SSHConfig: self.config.Comm.SSHConfigFunc(),
-			SSHPort:   xscommon.InstanceSSHPort,
+			SSHPort:   InstanceSSHPort,
 		},
 		new(commonsteps.StepProvision),
-		new(xscommon.StepShutdown),
+		new(StepShutdown),
 	}
 
 	if !self.config.SkipSetTemplate {
 		steps = append(steps,
-			new(xscommon.StepSetVmToTemplate))
+			new(StepSetVmToTemplate))
 	}
 
 	steps = append(steps,
-		&xscommon.StepDetachVdi{
+		&StepDetachVdi{
 			VdiUuidKey: "iso_vdi_uuid",
 		},
-		&xscommon.StepDetachVdi{
+		&StepDetachVdi{
 			VdiUuidKey: "isoname_vdi_uuid",
 		},
-		&xscommon.StepDetachVdi{
+		&StepDetachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 		},
-		&xscommon.StepDetachVdi{
+		&StepDetachVdi{
 			VdiUuidKey: "cd_vdi_uuid",
 		},
-		&xscommon.StepDetachVdi{
+		&StepDetachVdi{
 			VdiUuidKey: "floppy_vdi_uuid",
 		},
-		new(xscommon.StepExport))
+		new(StepExport))
 
 	if self.config.ISOName == "" {
 		steps = append(download_steps, steps...)
@@ -354,7 +343,7 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		return nil, errors.New("Build was halted.")
 	}
 
-	artifact, _ := xscommon.NewArtifact(self.config.OutputDir)
+	artifact, _ := NewArtifact(self.config.OutputDir)
 
 	return artifact, nil
 }

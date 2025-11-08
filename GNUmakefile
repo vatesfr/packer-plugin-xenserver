@@ -1,4 +1,5 @@
-NAME=xenserver
+NAME=xcp
+AUTHOR=disruptivemindseu
 BINARY=packer-plugin-${NAME}
 
 COUNT?=1
@@ -11,8 +12,7 @@ build:
 	@go build -o ${BINARY}
 
 dev: build
-	@mkdir -p ~/.packer.d/plugins/
-	@mv ${BINARY} ~/.packer.d/plugins/${BINARY}
+	@packer plugin install --path ./${BINARY} "github.com/${AUTHOR}/${NAME}"
 
 test:
 	@go test -race -count $(COUNT) $(TEST) -timeout=3m

@@ -49,7 +49,7 @@ func (snooper IPSnooper) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 }
 
 func (s *StepHTTPServer) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	var httpPort uint = 0
