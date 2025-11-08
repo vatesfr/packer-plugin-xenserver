@@ -2,7 +2,7 @@
 
 This builder plugin extends packer.io to support building images for XCP-ng.
 
-This is a fork trying to simplify how the builder works, and keep the minimum of code for maintenance
+This fork focuses on simplifying the builder’s logic and reducing the amount of code to make maintenance easier.
 
 ## Status
 
@@ -16,7 +16,7 @@ Put this line at the top of your pkr.hcl file
 packer {
   required_plugins {
     xcp = {
-      version = ">= 0.9.0-alt"
+      version = ">= 0.10.0"
       source  = "github.com/disruptivemindseu/xcp"
     }
   }
