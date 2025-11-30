@@ -15,6 +15,8 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 )
 
+type RemoteDestFunc func() (string, error)
+
 func SSHAddress(state multistep.StateBag) (string, error) {
 	sshIP := state.Get("ssh_address").(string)
 	sshHostPort := state.Get("ssh_port").(uint)
@@ -157,8 +159,7 @@ func forward(local_conn net.Conn, config *gossh.ClientConfig, server string, ser
 	return nil
 }
 
-func ssh_port_forward(local_listener net.Listener, remote_port int, remote_dest, host string, host_ssh_port int, username, password string) error {
-
+func ssh_port_forward(local_listener net.Listener, remote_port int, host string, host_ssh_port int, username, password string, get_remote_dest RemoteDestFunc) error {
 	config := &gossh.ClientConfig{
 		User: username,
 		Auth: []gossh.AuthMethod{
@@ -172,6 +173,12 @@ func ssh_port_forward(local_listener net.Listener, remote_port int, remote_dest,
 
 		if err != nil {
 			log.Printf("Local accept failed: %s", err)
+			return err
+		}
+
+		remote_dest, err := get_remote_dest()
+
+		if err != nil {
 			return err
 		}
 
