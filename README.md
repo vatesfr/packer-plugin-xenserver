@@ -24,9 +24,9 @@ The packer builder can be installed via `packer init` as long as the packer temp
 ```
 packer {
   required_plugins {
-   xenserver= {
+    xenserver= {
       version = ">= v0.6.0"
-      source = "github.com/vatesfr/packer-plugin-xenserver"
+      source = "github.com/vatesfr/xenserver"
     }
   }
 }
