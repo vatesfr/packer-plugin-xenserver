@@ -61,6 +61,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		self.config.DiskSize = 40000
 	}
 
+	if self.config.Disk2Name == "" {
+		self.config.Disk2Name = "Packer-disk2"
+	}
+
 	if self.config.VCPUsMax == 0 {
 		self.config.VCPUsMax = 1
 	}

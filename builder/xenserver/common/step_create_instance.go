@@ -18,6 +18,7 @@ type StepCreateInstance struct {
 
 	instance *xsclient.VMRef
 	vdi      *xsclient.VDIRef
+	vdi2     *xsclient.VDIRef
 }
 
 func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -143,6 +144,40 @@ func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 			ui.Error(fmt.Sprintf("Unable to connect packer disk VDI: %s", err.Error()))
 			return multistep.ActionHalt
 		}
+
+		if config.Disk2Size > 0 {
+
+			disk2Name := config.Disk2Name
+			if disk2Name == "" {
+				disk2Name = fmt.Sprintf("%s-disk2", config.VMName)
+			}
+
+			vdi2, err := c.GetClient().VDI.Create(
+				c.GetSessionRef(),
+				xenapi.VDIRecord{
+					NameLabel:   disk2Name,
+					VirtualSize: int(config.Disk2Size * 1024 * 1024),
+					Type:        "user",
+					Sharable:    false,
+					ReadOnly:    false,
+					SR:          sr,
+					OtherConfig: map[string]string{
+						"temp": "temp",
+					},
+				},
+			)
+			if err != nil {
+				ui.Error(fmt.Sprintf("Unable to create second VDI: %s", err.Error()))
+				return multistep.ActionHalt
+			}
+			self.vdi2 = &vdi2
+
+			err = ConnectVdi(c, instance, vdi2, xsclient.VbdTypeDisk)
+			if err != nil {
+				ui.Error(fmt.Sprintf("Unable to attach second VDI: %s", err.Error()))
+				return multistep.ActionHalt
+			}
+		}
 	}
 
 	// Connect Network
@@ -255,6 +290,14 @@ func (self *StepCreateInstance) Cleanup(state multistep.StateBag) {
 	if self.vdi != nil {
 		ui.Say("Destroying VDI")
 		err := c.GetClient().VDI.Destroy(c.GetSessionRef(), *self.vdi)
+		if err != nil {
+			ui.Error(err.Error())
+		}
+	}
+
+	if self.vdi2 != nil {
+		ui.Say("Destroying second VDI")
+		err := c.GetClient().VDI.Destroy(c.GetSessionRef(), *self.vdi2)
 		if err != nil {
 			ui.Error(err.Error())
 		}

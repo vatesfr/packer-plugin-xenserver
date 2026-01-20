@@ -102,6 +102,8 @@ type FlatConfig struct {
 	VMMemory                  *uint             `mapstructure:"vm_memory" cty:"vm_memory" hcl:"vm_memory"`
 	DiskName                  *string           `mapstructure:"disk_name" cty:"disk_name" hcl:"disk_name"`
 	DiskSize                  *uint             `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
+	Disk2Name                 *string           `mapstructure:"disk2_name" cty:"disk2_name" hcl:"disk2_name"`
+	Disk2Size                 *uint             `mapstructure:"disk2_size" cty:"disk2_size" hcl:"disk2_size"`
 	CloneTemplate             *string           `mapstructure:"clone_template" cty:"clone_template" hcl:"clone_template"`
 	VMOtherConfig             map[string]string `mapstructure:"vm_other_config" cty:"vm_other_config" hcl:"vm_other_config"`
 	ISOChecksum               *string           `mapstructure:"iso_checksum" cty:"iso_checksum" hcl:"iso_checksum"`
