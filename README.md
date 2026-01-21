@@ -52,7 +52,8 @@ If you are using an older version of packer or are still using json templates yo
 Once you have installed Packer, you must compile this plugin and install the
 resulting binary.
 
-Documentation for Plugins directory: [Official Docs](https://developer.hashicorp.com/packer/docs/configure#packer-s-plugin-directory)
+Documentation for Plugins development: [Official Docs](https://developer.hashicorp.com/packer/docs/plugins/install#use-a-plugin-under-development)
+
 
 ### Linux/MacOS
 
