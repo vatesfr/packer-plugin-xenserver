@@ -10,7 +10,7 @@ import (
 type VmCleanup struct{}
 
 func (self *VmCleanup) Cleanup(state multistep.StateBag) {
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("config").(Config)
 	c := state.Get("client").(*Connection)
 
 	if config.ShouldKeepVM(state) {

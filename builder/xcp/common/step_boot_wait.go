@@ -12,7 +12,7 @@ type StepBootWait struct{}
 
 func (self *StepBootWait) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	c := state.Get("client").(*Connection)
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	instance, _ := c.client.VM.GetByUUID(c.session, state.Get("instance_uuid").(string))

@@ -1,4 +1,4 @@
-module github.com/xenserver/packer-builder-xenserver
+module github.com/disruptivemindseu/packer-plugin-xcp
 
 go 1.20
 

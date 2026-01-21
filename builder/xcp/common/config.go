@@ -1,3 +1,4 @@
+//go:generate packer-sdc mapstructure-to-hcl2 -type Config
 package common
 
 import (
@@ -7,12 +8,17 @@ import (
 	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/common"
+	"github.com/hashicorp/packer-plugin-sdk/communicator"
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
-type CommonConfig struct {
+type Config struct {
+	common.PackerConfig `mapstructure:",squash"`
+	Comm               communicator.Config `mapstructure:",squash"`
+
+	// Fields from CommonConfig
 	Username    string `mapstructure:"remote_username"`
 	Password    string `mapstructure:"remote_password"`
 	HostIp      string `mapstructure:"remote_host"`
@@ -43,8 +49,6 @@ type CommonConfig struct {
 	HTTPPortMin uint   `mapstructure:"http_port_min"`
 	HTTPPortMax uint   `mapstructure:"http_port_max"`
 
-	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
-	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
 	SSHKeyPath  string `mapstructure:"ssh_key_path"`
 	SSHPassword string `mapstructure:"ssh_password"`
 	SSHPort     uint   `mapstructure:"ssh_port"`
@@ -58,14 +62,38 @@ type CommonConfig struct {
 	Format    string `mapstructure:"format"`
 	KeepVM    string `mapstructure:"keep_vm"`
 	IPGetter  string `mapstructure:"ip_getter"`
+
+	// Fields from original Config
+	VCPUsMax       uint              `mapstructure:"vcpus_max"`
+	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`
+	VMMemory       uint              `mapstructure:"vm_memory"`
+	DiskName       string            `mapstructure:"disk_name"`
+	DiskSize       uint              `mapstructure:"disk_size"`
+	CloneTemplate  string            `mapstructure:"clone_template"`
+	VMOtherConfig  map[string]string `mapstructure:"vm_other_config"`
+
+	ISOChecksum string   `mapstructure:"iso_checksum"`
+	ISOUrls     []string `mapstructure:"iso_urls"`
+	ISOUrl      string   `mapstructure:"iso_url"`
+	ISOName     string   `mapstructure:"iso_name"`
+
+	PlatformArgs map[string]string `mapstructure:"platform_args"`
+
+	RawInstallTimeout string        `mapstructure:"install_timeout"`
+	InstallTimeout    time.Duration ``
+	SourcePath        string        `mapstructure:"source_path"`
+
+	Firmware        string `mapstructure:"firmware"`
+	SkipSetTemplate bool   `mapstructure:"skip_set_template"`
+
+	ctx interpolate.Context
 }
 
-func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) []error {
+func (c *Config) Prepare(ctx *interpolate.Context, pc *common.PackerConfig) []error {
 	var err error
 	var errs []error
 
 	// Set default values
-
 	if c.HostSshPort == 0 {
 		c.HostSshPort = 22
 	}
@@ -98,16 +126,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		c.FloppyFiles = make([]string, 0)
 	}
 
-	/*
-		if c.SSHHostPortMin == 0 {
-			c.SSHHostPortMin = 2222
-		}
-
-		if c.SSHHostPortMax == 0 {
-			c.SSHHostPortMax = 4444
-		}
-	*/
-
 	if c.SSHPort == 0 {
 		c.SSHPort = 22
 	}
@@ -137,7 +155,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	}
 
 	// Validation
-
 	if c.Username == "" {
 		errs = append(errs, errors.New("remote_username must be specified."))
 	}
@@ -171,13 +188,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		}
 	}
 
-	/*
-		if c.SSHHostPortMin > c.SSHHostPortMax {
-			errs = append(errs,
-				errors.New("ssh_host_port_min must be less than ssh_host_port_max"))
-		}
-	*/
-
 	if c.SSHUser == "" {
 		errs = append(errs, errors.New("An ssh_username must be specified."))
 	}
@@ -208,8 +218,8 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	return errs
 }
 
-// steps should check config.ShouldKeepVM first before cleaning up the VM
-func (c CommonConfig) ShouldKeepVM(state multistep.StateBag) bool {
+// ShouldKeepVM checks if the VM should be kept based on configuration and build state
+func (c Config) ShouldKeepVM(state multistep.StateBag) bool {
 	switch c.KeepVM {
 	case "always":
 		return true
@@ -225,7 +235,7 @@ func (c CommonConfig) ShouldKeepVM(state multistep.StateBag) bool {
 	}
 }
 
-func (config CommonConfig) GetSR(c *Connection) (xenapi.SRRef, error) {
+func (config Config) GetSR(c *Connection) (xenapi.SRRef, error) {
 	if config.SrName == "" {
 		return getDefaultSR(c)
 	} else {
@@ -249,11 +259,10 @@ func (config CommonConfig) GetSR(c *Connection) (xenapi.SRRef, error) {
 	}
 }
 
-func (config CommonConfig) GetISOSR(c *Connection) (xenapi.SRRef, error) {
+func (config Config) GetISOSR(c *Connection) (xenapi.SRRef, error) {
 	var srRef xenapi.SRRef
 	if config.SrISOName == "" {
 		return getDefaultSR(c)
-
 	} else {
 		// Use the provided name label to find the SR to use
 		srs, err := c.GetClient().SR.GetByNameLabel(c.session, config.SrISOName)
@@ -302,4 +311,8 @@ func getDefaultSR(c *Connection) (xenapi.SRRef, error) {
 	}
 
 	return srRef, errors.New(fmt.Sprintf("failed to find default SR on host '%s'", hostRef))
+}
+
+func (c Config) GetInterpContext() *interpolate.Context {
+	return &c.ctx
 }

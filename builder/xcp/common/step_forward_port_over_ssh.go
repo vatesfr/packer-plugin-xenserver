@@ -20,7 +20,7 @@ type StepForwardPortOverSSH struct {
 
 func (self *StepForwardPortOverSSH) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 
-	config := state.Get("commonconfig").(CommonConfig)
+	config := state.Get("config").(Config)
 	ui := state.Get("ui").(packer.Ui)
 
 	// Find a free local port:
