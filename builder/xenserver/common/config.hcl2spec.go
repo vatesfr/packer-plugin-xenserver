@@ -221,6 +221,8 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vm_memory":                    &hcldec.AttrSpec{Name: "vm_memory", Type: cty.Number, Required: false},
 		"disk_name":                    &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
 		"disk_size":                    &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
+		"disk2_name":                   &hcldec.AttrSpec{Name: "disk2_name", Type: cty.String, Required: false},
+		"disk2_size":                   &hcldec.AttrSpec{Name: "disk2_size", Type: cty.Number, Required: false},																																																																																																																																																																																																																																																																									"disk2_name":                   &hcldec.AttrSpec{Name: "disk2_name", Type: cty.String, Required: false},																																																																																																																																																																																																																																																																																																							"disk2_size":                   &hcldec.AttrSpec{Name: "disk2_size", Type: cty.Number, Required: false},
 		"clone_template":               &hcldec.AttrSpec{Name: "clone_template", Type: cty.String, Required: false},
 		"vm_other_config":              &hcldec.AttrSpec{Name: "vm_other_config", Type: cty.Map(cty.String), Required: false},
 		"iso_checksum":                 &hcldec.AttrSpec{Name: "iso_checksum", Type: cty.String, Required: false},
