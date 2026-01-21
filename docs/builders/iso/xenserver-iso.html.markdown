@@ -105,6 +105,12 @@ each category, the available options are alphabetized and described.
 * `disk_size` (integer) - The size, in megabytes, of the hard disk to create
   for the VM. By default, this is 40000 (about 40 GB).
 
+* `disk2_name` (string) - The name of the second hard disk to create for the VM.
+   By default, the name is "Packer-disk".
+
+* `disk2_size` (integer) - The size, in megabytes, of the second hard disk to 
+   create for the VM. 
+
 * `firmware` (string) - Whether to use `bios` or `uefi` as the boot firmware
   for the resulting VM. Defaults to `bios`.
 
