@@ -80,8 +80,8 @@ func TestBuilderPrepare_DiskSize(t *testing.T) {
 		t.Fatalf("bad err: %s", err)
 	}
 
-	if b.config.DiskSize != 40000 {
-		t.Fatalf("bad size: %d", b.config.DiskSize)
+	if b.config.Disks[0].Size != 40000 {
+		t.Fatalf("bad size: %d", b.config.Disks[0].Size)
 	}
 
 	config["disk_size"] = 60000
@@ -94,8 +94,8 @@ func TestBuilderPrepare_DiskSize(t *testing.T) {
 		t.Fatalf("should not have error: %s", err)
 	}
 
-	if b.config.DiskSize != 60000 {
-		t.Fatalf("bad size: %d", b.config.DiskSize)
+	if b.config.Disks[0].Size != 60000 {
+		t.Fatalf("bad size: %d", b.config.Disks[0].Size)
 	}
 }
 
