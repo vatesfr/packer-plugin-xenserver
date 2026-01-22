@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -118,9 +117,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}
 
 	if self.config.ISOName == "" {
-		// If ISO name is not specified, assume a URL and checksum has been provided.
-		self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
-
 		if len(self.config.ISOUrls) == 0 {
 			if self.config.ISOUrl == "" {
 				errs = packer.MultiErrorAppend(
