@@ -85,17 +85,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		self.config.Firmware = "bios"
 	}
 
-	if len(self.config.PlatformArgs) == 0 {
-		pargs := make(map[string]string)
-		pargs["viridian"] = "false"
-		pargs["nx"] = "true"
-		pargs["pae"] = "true"
-		pargs["apic"] = "true"
-		pargs["timeoffset"] = "0"
-		pargs["acpi"] = "1"
-		self.config.PlatformArgs = pargs
-	}
-
 	// Template substitution
 
 	templates := map[string]*string{

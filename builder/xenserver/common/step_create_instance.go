@@ -76,7 +76,18 @@ func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 		return multistep.ActionHalt
 	}
 
-	err = c.GetClient().VM.SetPlatform(c.GetSessionRef(), instance, config.PlatformArgs)
+	// If user didn't set platform args, use existing ones from the template
+	platformArgs := config.PlatformArgs
+	if platformArgs == nil {
+		platformArgs, err = c.GetClient().VM.GetPlatform(c.GetSessionRef(), instance)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error getting VM platform: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+		log.Printf("Using existing platform args: %v\n", platformArgs)
+	}
+	// Only set platform if we have args (should always be the case)
+	err = c.GetClient().VM.SetPlatform(c.GetSessionRef(), instance, platformArgs)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Error setting VM platform: %s", err.Error()))
 		return multistep.ActionHalt
