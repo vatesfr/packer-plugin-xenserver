@@ -84,7 +84,7 @@ func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 			ui.Error(fmt.Sprintf("Error getting VM platform: %s", err.Error()))
 			return multistep.ActionHalt
 		}
-		log.Printf("Using existing platform args: %v\n", platformArgs)
+		ui.Say(fmt.Sprintf("Using existing platform args: %v\n", platformArgs))
 	}
 	// Only set platform if we have args (should always be the case)
 	err = c.GetClient().VM.SetPlatform(c.GetSessionRef(), instance, platformArgs)
