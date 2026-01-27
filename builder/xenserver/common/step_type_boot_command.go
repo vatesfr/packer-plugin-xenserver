@@ -42,19 +42,22 @@ func (step *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		return multistep.ActionContinue
 	}
 
-	vmRef, err := c.client.VM.GetByNameLabel(c.session, config.VMName)
+	// Safely retrieve the instance_uuid from the state bag to prevent type assertion panics.
+	rawUUID := state.Get("instance_uuid")
+	instance_uuid, ok := rawUUID.(string)
+	if !ok || rawUUID == "" {
+		ui.Error("Invalid or missing instance_uuid in state bag!")
+		return multistep.ActionHalt
+	}
 
+	vmRef, err := c.client.VM.GetByUUID(c.session, instance_uuid)
 	if err != nil {
 		state.Put("error", err)
 		ui.Error(err.Error())
 		return multistep.ActionHalt
 	}
 
-	if len(vmRef) != 1 {
-		ui.Error(fmt.Sprintf("expected to find a single VM, instead found '%d'. Ensure the VM name is unique", len(vmRef)))
-	}
-
-	consoles, err := c.client.VM.GetConsoles(c.session, vmRef[0])
+	consoles, err := c.client.VM.GetConsoles(c.session, vmRef)
 	if err != nil {
 		state.Put("error", err)
 		ui.Error(err.Error())
