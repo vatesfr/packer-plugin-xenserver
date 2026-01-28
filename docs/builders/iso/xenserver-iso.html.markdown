@@ -99,11 +99,30 @@ each category, the available options are alphabetized and described.
   run `xe template-list`. Setting the correct value hints to XenServer how to
   optimize the virtual hardware to work best with that operating system.
 
+* `dhcp_wait` (string) - The time to wait for the virtual machine to retrieve
+  an initial IP address via DHCP. The value of this should be
+  a duration. Examples are `500ms` and `10s` which will cause Packer to wait
+  500 milliseconds and 10 seconds, respectively. If this isn't specified,
+  the default is 500 milliseconds.
+
 * `disk_name` (string) - The name of the hard disk to create for the VM.
    By default, the name is "Packer-disk".
 
 * `disk_size` (integer) - The size, in megabytes, of the hard disk to create
   for the VM. By default, this is 40000 (about 40 GB).
+
+If you want to add multiple disk, you can do it like this:
+
+```
+  disk {
+    disk_name = "root"
+    disk_size = 20480    
+  }
+  disk {
+    disk_name = "multidisk-is-working"
+    disk_size = 10240    
+  }
+```
 
 * `firmware` (string) - Whether to use `bios` or `uefi` as the boot firmware
   for the resulting VM. Defaults to `bios`.

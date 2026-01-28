@@ -9,6 +9,14 @@ import (
 
 // FlatConfig is an auto-generated flat version of Config.
 // Where the contents of a field with a `mapstructure:,squash` tag are bubbled up.
+
+// FlatDiskConfig is an auto-generated flat version of DiskConfig.
+type FlatDiskConfig struct {
+	Name   *string `mapstructure:"disk_name" cty:"disk_name" hcl:"disk_name"`
+	Size   *uint   `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
+	SRName *string `mapstructure:"sr_name" cty:"sr_name" hcl:"sr_name"`
+}
+
 type FlatConfig struct {
 	PackerBuildName           *string           `mapstructure:"packer_build_name" cty:"packer_build_name" hcl:"packer_build_name"`
 	PackerBuilderType         *string           `mapstructure:"packer_builder_type" cty:"packer_builder_type" hcl:"packer_builder_type"`
@@ -36,6 +44,7 @@ type FlatConfig struct {
 	BootCommand               []string          `mapstructure:"boot_command" cty:"boot_command" hcl:"boot_command"`
 	ShutdownCommand           *string           `mapstructure:"shutdown_command" cty:"shutdown_command" hcl:"shutdown_command"`
 	RawBootWait               *string           `mapstructure:"boot_wait" cty:"boot_wait" hcl:"boot_wait"`
+	RawDhcpWait               *string           `mapstructure:"dhcp_wait" cty:"dhcp_wait" hcl:"dhcp_wait"`
 	ToolsIsoName              *string           `mapstructure:"tools_iso_name" cty:"tools_iso_name" hcl:"tools_iso_name"`
 	HTTPDir                   *string           `mapstructure:"http_directory" cty:"http_directory" hcl:"http_directory"`
 	HTTPPortMin               *uint             `mapstructure:"http_port_min" cty:"http_port_min" hcl:"http_port_min"`
@@ -102,6 +111,7 @@ type FlatConfig struct {
 	VMMemory                  *uint             `mapstructure:"vm_memory" cty:"vm_memory" hcl:"vm_memory"`
 	DiskName                  *string           `mapstructure:"disk_name" cty:"disk_name" hcl:"disk_name"`
 	DiskSize                  *uint             `mapstructure:"disk_size" cty:"disk_size" hcl:"disk_size"`
+	Disks                     []FlatDiskConfig  `mapstructure:"disks" cty:"disks" hcl:"disks"`
 	CloneTemplate             *string           `mapstructure:"clone_template" cty:"clone_template" hcl:"clone_template"`
 	VMOtherConfig             map[string]string `mapstructure:"vm_other_config" cty:"vm_other_config" hcl:"vm_other_config"`
 	ISOChecksum               *string           `mapstructure:"iso_checksum" cty:"iso_checksum" hcl:"iso_checksum"`
@@ -153,6 +163,7 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"boot_command":                 &hcldec.AttrSpec{Name: "boot_command", Type: cty.List(cty.String), Required: false},
 		"shutdown_command":             &hcldec.AttrSpec{Name: "shutdown_command", Type: cty.String, Required: false},
 		"boot_wait":                    &hcldec.AttrSpec{Name: "boot_wait", Type: cty.String, Required: false},
+		"dhcp_wait":                    &hcldec.AttrSpec{Name: "dhcp_wait", Type: cty.String, Required: false},
 		"tools_iso_name":               &hcldec.AttrSpec{Name: "tools_iso_name", Type: cty.String, Required: false},
 		"http_directory":               &hcldec.AttrSpec{Name: "http_directory", Type: cty.String, Required: false},
 		"http_port_min":                &hcldec.AttrSpec{Name: "http_port_min", Type: cty.Number, Required: false},
@@ -219,17 +230,25 @@ func (*FlatConfig) HCL2Spec() map[string]hcldec.Spec {
 		"vm_memory":                    &hcldec.AttrSpec{Name: "vm_memory", Type: cty.Number, Required: false},
 		"disk_name":                    &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
 		"disk_size":                    &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
-		"clone_template":               &hcldec.AttrSpec{Name: "clone_template", Type: cty.String, Required: false},
-		"vm_other_config":              &hcldec.AttrSpec{Name: "vm_other_config", Type: cty.Map(cty.String), Required: false},
-		"iso_checksum":                 &hcldec.AttrSpec{Name: "iso_checksum", Type: cty.String, Required: false},
-		"iso_urls":                     &hcldec.AttrSpec{Name: "iso_urls", Type: cty.List(cty.String), Required: false},
-		"iso_url":                      &hcldec.AttrSpec{Name: "iso_url", Type: cty.String, Required: false},
-		"iso_name":                     &hcldec.AttrSpec{Name: "iso_name", Type: cty.String, Required: false},
-		"platform_args":                &hcldec.AttrSpec{Name: "platform_args", Type: cty.Map(cty.String), Required: false},
-		"install_timeout":              &hcldec.AttrSpec{Name: "install_timeout", Type: cty.String, Required: false},
-		"source_path":                  &hcldec.AttrSpec{Name: "source_path", Type: cty.String, Required: false},
-		"firmware":                     &hcldec.AttrSpec{Name: "firmware", Type: cty.String, Required: false},
-		"skip_set_template":            &hcldec.AttrSpec{Name: "skip_set_template", Type: cty.Bool, Required: false},
+		"disks": &hcldec.BlockListSpec{
+			TypeName: "disk",
+			Nested: &hcldec.ObjectSpec{
+				"disk_name": &hcldec.AttrSpec{Name: "disk_name", Type: cty.String, Required: false},
+				"disk_size": &hcldec.AttrSpec{Name: "disk_size", Type: cty.Number, Required: false},
+				"sr_name":   &hcldec.AttrSpec{Name: "sr_name", Type: cty.String, Required: false},
+			},
+		},
+		"clone_template":    &hcldec.AttrSpec{Name: "clone_template", Type: cty.String, Required: false},
+		"vm_other_config":   &hcldec.AttrSpec{Name: "vm_other_config", Type: cty.Map(cty.String), Required: false},
+		"iso_checksum":      &hcldec.AttrSpec{Name: "iso_checksum", Type: cty.String, Required: false},
+		"iso_urls":          &hcldec.AttrSpec{Name: "iso_urls", Type: cty.List(cty.String), Required: false},
+		"iso_url":           &hcldec.AttrSpec{Name: "iso_url", Type: cty.String, Required: false},
+		"iso_name":          &hcldec.AttrSpec{Name: "iso_name", Type: cty.String, Required: false},
+		"platform_args":     &hcldec.AttrSpec{Name: "platform_args", Type: cty.Map(cty.String), Required: false},
+		"install_timeout":   &hcldec.AttrSpec{Name: "install_timeout", Type: cty.String, Required: false},
+		"source_path":       &hcldec.AttrSpec{Name: "source_path", Type: cty.String, Required: false},
+		"firmware":          &hcldec.AttrSpec{Name: "firmware", Type: cty.String, Required: false},
+		"skip_set_template": &hcldec.AttrSpec{Name: "skip_set_template", Type: cty.Bool, Required: false},
 	}
 	return s
 }

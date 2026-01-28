@@ -12,21 +12,31 @@ import (
 	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
+// DiskConfig represents a virtual disk to be created on the VM
+type DiskConfig struct {
+	Name   string `mapstructure:"disk_name"`
+	Size   uint   `mapstructure:"disk_size"`
+	SRName string `mapstructure:"sr_name"`
+}
+
 type CommonConfig struct {
 	Username    string `mapstructure:"remote_username"`
 	Password    string `mapstructure:"remote_password"`
 	HostIp      string `mapstructure:"remote_host"`
 	HostSshPort uint   `mapstructure:"remote_ssh_port"`
 
-	VMName             string   `mapstructure:"vm_name"`
-	VMDescription      string   `mapstructure:"vm_description"`
-	SrName             string   `mapstructure:"sr_name"`
-	SrISOName          string   `mapstructure:"sr_iso_name" required:"false"`
-	CDFiles            []string `mapstructure:"cd_files"`
-	FloppyFiles        []string `mapstructure:"floppy_files"`
-	NetworkNames       []string `mapstructure:"network_names"`
-	ExportNetworkNames []string `mapstructure:"export_network_names"`
-	VMTags             []string `mapstructure:"vm_tags"`
+	VMName             string       `mapstructure:"vm_name"`
+	VMDescription      string       `mapstructure:"vm_description"`
+	SrName             string       `mapstructure:"sr_name"`
+	SrISOName          string       `mapstructure:"sr_iso_name" required:"false"`
+	DiskName           string       `mapstructure:"disk_name"`
+	DiskSize           uint         `mapstructure:"disk_size"`
+	Disks              []DiskConfig `mapstructure:"disks"`
+	CDFiles            []string     `mapstructure:"cd_files"`
+	FloppyFiles        []string     `mapstructure:"floppy_files"`
+	NetworkNames       []string     `mapstructure:"network_names"`
+	ExportNetworkNames []string     `mapstructure:"export_network_names"`
+	VMTags             []string     `mapstructure:"vm_tags"`
 
 	HostPortMin uint `mapstructure:"host_port_min"`
 	HostPortMax uint `mapstructure:"host_port_max"`
@@ -36,6 +46,8 @@ type CommonConfig struct {
 
 	RawBootWait string `mapstructure:"boot_wait"`
 	BootWait    time.Duration
+	RawDhcpWait string `mapstructure:"dhcp_wait"`
+	DhcpWait    time.Duration
 
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
 
@@ -64,6 +76,18 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	var err error
 	var errs []error
 
+	// Handle backward compatibility: convert old single-disk format to new multi-disk format
+	if len(c.Disks) == 0 && (c.DiskName != "" || c.DiskSize > 0 || c.SrName != "") {
+		// User provided old-style disk configuration
+		c.Disks = []DiskConfig{
+			{
+				Name:   c.DiskName,
+				Size:   c.DiskSize,
+				SRName: c.SrName,
+			},
+		}
+	}
+
 	// Set default values
 
 	if c.HostSshPort == 0 {
@@ -80,6 +104,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 
 	if c.RawBootWait == "" {
 		c.RawBootWait = "5s"
+	}
+
+	if c.RawDhcpWait == "" {
+		c.RawDhcpWait = "500ms"
 	}
 
 	if c.HTTPPortMin == 0 {
@@ -161,6 +189,11 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	c.BootWait, err = time.ParseDuration(c.RawBootWait)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("Failed to parse boot_wait: %s", err))
+	}
+
+	c.DhcpWait, err = time.ParseDuration(c.RawDhcpWait)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("Failed to parse dhcp_wait: %s", err))
 	}
 
 	if c.SSHKeyPath != "" {

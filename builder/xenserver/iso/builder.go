@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"path"
-	"strings"
 	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
@@ -53,12 +52,37 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		self.config.RawInstallTimeout = "200m"
 	}
 
-	if self.config.DiskName == "" {
-		self.config.DiskName = "Packer-disk"
-	}
-
-	if self.config.DiskSize == 0 {
-		self.config.DiskSize = 40000
+	// Handle disk defaults: if no disks are configured, set up a single default disk
+	if len(self.config.Disks) == 0 {
+		diskName := "Packer-disk"
+		if self.config.DiskName != "" {
+			diskName = self.config.DiskName
+		}
+		diskSize := uint(40000)
+		if self.config.DiskSize > 0 {
+			diskSize = self.config.DiskSize
+		}
+		self.config.Disks = []xscommon.DiskConfig{
+			{
+				Name:   diskName,
+				Size:   diskSize,
+				SRName: self.config.SrName,
+			},
+		}
+	} else {
+		// Apply defaults to each disk that doesn't have a name or size
+		for i := range self.config.Disks {
+			if self.config.Disks[i].Name == "" {
+				self.config.Disks[i].Name = fmt.Sprintf("Packer-disk-%d", i)
+			}
+			if self.config.Disks[i].Size == 0 {
+				self.config.Disks[i].Size = 40000
+			}
+			// Use default SR if disk doesn't specify one
+			if self.config.Disks[i].SRName == "" {
+				self.config.Disks[i].SRName = self.config.SrName
+			}
+		}
 	}
 
 	if self.config.VCPUsMax == 0 {
@@ -118,9 +142,6 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	}
 
 	if self.config.ISOName == "" {
-		// If ISO name is not specified, assume a URL and checksum has been provided.
-		self.config.ISOChecksum = strings.ToLower(self.config.ISOChecksum)
-
 		if len(self.config.ISOUrls) == 0 {
 			if self.config.ISOUrl == "" {
 				errs = packer.MultiErrorAppend(

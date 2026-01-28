@@ -17,8 +17,6 @@ type Config struct {
 	VCPUsMax       uint              `mapstructure:"vcpus_max"`
 	VCPUsAtStartup uint              `mapstructure:"vcpus_atstartup"`
 	VMMemory       uint              `mapstructure:"vm_memory"`
-	DiskName       string            `mapstructure:"disk_name"`
-	DiskSize       uint              `mapstructure:"disk_size"`
 	CloneTemplate  string            `mapstructure:"clone_template"`
 	VMOtherConfig  map[string]string `mapstructure:"vm_other_config"`
 	VMTags         []string          `mapstructure:"vm_tags"`
@@ -34,8 +32,8 @@ type Config struct {
 	InstallTimeout    time.Duration ``
 	SourcePath        string        `mapstructure:"source_path"`
 
-	Firmware string `mapstructure:"firmware"`
-	SkipSetTemplate bool `mapstructure:"skip_set_template"`
+	Firmware        string `mapstructure:"firmware"`
+	SkipSetTemplate bool   `mapstructure:"skip_set_template"`
 
 	ctx interpolate.Context
 }
