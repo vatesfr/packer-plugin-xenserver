@@ -111,6 +111,19 @@ each category, the available options are alphabetized and described.
 * `disk_size` (integer) - The size, in megabytes, of the hard disk to create
   for the VM. By default, this is 40000 (about 40 GB).
 
+If you want to add multiple disk, you can do it like this:
+
+```
+  disk {
+    disk_name = "root"
+    disk_size = 20480    
+  }
+  disk {
+    disk_name = "multidisk-is-working"
+    disk_size = 10240    
+  }
+```
+
 * `firmware` (string) - Whether to use `bios` or `uefi` as the boot firmware
   for the resulting VM. Defaults to `bios`.
 
