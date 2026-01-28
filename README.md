@@ -7,14 +7,14 @@ This is a fork of the original builder since the original project was abandoned 
 It improves the original project in the following ways:
 1. Developed alongside the [Xenorchestra terraform provider](https://github.com/vatesfr/terraform-provider-xenorchestra) to ensure the hashicorp ecosystem is interoperable.
 2. Reimplements how the boot commands are sent over VNC to be compatible with later versions of Xenserver (Citrix hypervisor) and XCP-ng
+3. New feature are added on regular basics, following request made via issues or PR
 
 ## Status
 
-At the time of this writing the packer builder has been verified to work with Xenserver 7.6 and can launch VMs with the packer output through the xenorchestra terraform provider.
+At the time of this writing (January 2026) the packer builder has been verified to work with XCP-ng 8.3 and we can create VMs with the templates built by this Packer plugin either through the xenorchestra terraform provider or using Xen Orchestra web UI.
 
 The following list contains things that are incomplete but will be worked on soon:
 
-- The documentation is still in an inconsistent state with upstream
 - XVA builder is untested
 - Lots of dead code to remove from upstream
 
@@ -25,7 +25,7 @@ The packer builder can be installed via `packer init` as long as the packer temp
 packer {
   required_plugins {
     xenserver= {
-      version = ">= v0.6.0"
+      version = ">= v0.9.0"
       source = "github.com/vatesfr/xenserver"
     }
   }
@@ -37,8 +37,6 @@ The following command will install the packer plugin using the Ubuntu example pr
 ```
 packer init examples/ubuntu/ubuntu-2004.pkr.hcl
 ```
-
-If you are using an older version of packer or are still using json templates you will need to download the relevant release from the project's [releases page](https://github.com/vatesfr/packer-builder-xenserver/releases) and copy the binary to `~/.packer.d/plugins/packer-builder-xenserver-iso`.
 
 ## Developing the builder
 
@@ -54,24 +52,19 @@ resulting binary.
 
 Documentation for Plugins directory: [Official Docs](https://developer.hashicorp.com/packer/docs/configure#packer-s-plugin-directory)
 
-### Linux/MacOS
+To compile the plugin, you can use this commands:
 
-```shell
-go build -o packer-plugin-xenserver
+```
+make build
+make dev
+```
+`make dev` should output
 
-# Add the plugin to the location packer expects it to be installed in
-mkdir -p ~/.packer.d/plugins/
-cp packer-plugin-xenserver  ~/.packer.d/plugins
+```
+Successfully installed plugin github.com/vatesfr/xenserver from <path>/packer-plugin-xenserver/packer-plugin-xenserver to ~/.packer.d/plugins/github.com/vatesfr/xenserver/packer-plugin-xenserver_v0.9.0-dev_x5.0_linux_amd64
 ```
 
-### Windows (Powershell)
-
-```powershell
-go build -o packer-plugin-xenserver
-
-mkdir "%APPDATA%\packer.d\plugins"
-cp packer-plugin-xenserver  "%APPDATA%\packer.d\plugins"
-```
+Then you can use your build file like usual.
 
 # Documentation
 
@@ -80,8 +73,4 @@ xenserver-iso docs](docs/builders/iso/xenserver-iso.html.markdown)
 
 ## Support
 
-You can discuss any issues you have or feature requests in [Discord](https://discord.gg/ZpNq8ez).
-
-If you'd like to support my effort on the project, please consider buying me a coffee
-
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/ddelnano)
+You can discuss any issues you have or feature requests directly on this repository, or on the [forum](https://xcp-ng.org/forum/).
