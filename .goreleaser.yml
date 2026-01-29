@@ -70,7 +70,7 @@ signs:
       - "--detach-sign"
       - "${artifact}"
 release:
-  draft: false
+  draft: true
 
 changelog:
   disable: true
