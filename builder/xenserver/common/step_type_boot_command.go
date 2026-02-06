@@ -46,9 +46,9 @@ func (step *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 	// Prefer UUID lookup when available. Fall back to name lookup otherwise.
 	var vmRef xenapi.VMRef
 	rawUUID := state.Get("instance_uuid")
-	instance_uuid, ok := rawUUID.(string)
-	if ok && instance_uuid != "" {
-		vmByID, err := c.client.VM.GetByUUID(c.session, instance_uuid)
+	instanceUUID, ok := rawUUID.(string)
+	if ok && instanceUUID != "" {
+		vmByID, err := c.client.VM.GetByUUID(c.session, instanceUUID)
 		if err != nil {
 			ui.Say("Failed to get VM by UUID. Falling back to name based lookup...")
 		} else {
