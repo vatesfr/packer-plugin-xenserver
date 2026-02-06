@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 	"github.com/hashicorp/packer-plugin-sdk/template/interpolate"
 	"github.com/mitchellh/go-vnc"
+	xenapi "github.com/terra-farm/go-xen-api-client"
 )
 
 const KeyLeftShift uint32 = 0xFFE1
@@ -42,19 +43,31 @@ func (step *StepTypeBootCommand) Run(ctx context.Context, state multistep.StateB
 		return multistep.ActionContinue
 	}
 
-	// Safely retrieve the instance_uuid from the state bag to prevent type assertion panics.
+	// Prefer UUID lookup when available. Fall back to name lookup otherwise.
+	var vmRef xenapi.VMRef
 	rawUUID := state.Get("instance_uuid")
 	instance_uuid, ok := rawUUID.(string)
-	if !ok || rawUUID == "" {
-		ui.Error("Invalid or missing instance_uuid in state bag!")
-		return multistep.ActionHalt
+	if ok && instance_uuid != "" {
+		vmByID, err := c.client.VM.GetByUUID(c.session, instance_uuid)
+		if err != nil {
+			ui.Say("Failed to get VM by UUID. Falling back to name based lookup...")
+		} else {
+			vmRef = vmByID
+		}
 	}
 
-	vmRef, err := c.client.VM.GetByUUID(c.session, instance_uuid)
-	if err != nil {
-		state.Put("error", err)
-		ui.Error(err.Error())
-		return multistep.ActionHalt
+	if vmRef == "" {
+		vmByName, err := c.client.VM.GetByNameLabel(c.session, config.VMName)
+		if err != nil {
+			ui.Error(err.Error())
+			state.Put("error", err)
+			return multistep.ActionHalt
+		}
+		if len(vmByName) != 1 {
+			ui.Error(fmt.Sprintf("expected to find a single VM, instead found '%d'. Ensure the VM name is unique", len(vmByName)))
+			return multistep.ActionHalt
+		}
+		vmRef = vmByName[0]
 	}
 
 	consoles, err := c.client.VM.GetConsoles(c.session, vmRef)
