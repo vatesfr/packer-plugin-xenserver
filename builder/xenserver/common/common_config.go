@@ -44,10 +44,10 @@ type CommonConfig struct {
 	BootCommand     []string `mapstructure:"boot_command"`
 	ShutdownCommand string   `mapstructure:"shutdown_command"`
 
-	RawBootWait string `mapstructure:"boot_wait"`
-	BootWait    time.Duration
-	RawDhcpWait string `mapstructure:"dhcp_wait"`
-	DhcpWait    time.Duration
+	RawBootWait string        `mapstructure:"boot_wait"`
+	BootWait    time.Duration `mapstructure-to-hcl2:",skip"`
+	RawDhcpWait string        `mapstructure:"dhcp_wait"`
+	DhcpWait    time.Duration `mapstructure-to-hcl2:",skip"`
 
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
 
@@ -57,14 +57,7 @@ type CommonConfig struct {
 
 	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
 	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
-	SSHKeyPath  string `mapstructure:"ssh_key_path"`
-	SSHPassword string `mapstructure:"ssh_password"`
-	SSHPort     uint   `mapstructure:"ssh_port"`
-	SSHUser     string `mapstructure:"ssh_username"`
-	SSHConfig   `mapstructure:",squash"`
-
-	RawSSHWaitTimeout string `mapstructure:"ssh_wait_timeout"`
-	SSHWaitTimeout    time.Duration
+	SSHConfig `mapstructure:",squash"`
 
 	OutputDir string `mapstructure:"output_directory"`
 	Format    string `mapstructure:"format"`
@@ -118,8 +111,8 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		c.HTTPPortMax = 9000
 	}
 
-	if c.RawSSHWaitTimeout == "" {
-		c.RawSSHWaitTimeout = "200m"
+	if c.Comm.SSHWaitTimeout == 0 {
+		c.Comm.SSHWaitTimeout = 200 * time.Minute
 	}
 
 	if c.FloppyFiles == nil {
@@ -136,13 +129,10 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		}
 	*/
 
-	if c.SSHPort == 0 {
-		c.SSHPort = 22
+	if c.Comm.SSHPort == 0 {
+		c.Comm.SSHPort = 22
 	}
 
-	if c.RawSSHWaitTimeout == "" {
-		c.RawSSHWaitTimeout = "20m"
-	}
 
 	if c.OutputDir == "" {
 		c.OutputDir = fmt.Sprintf("output-%s", pc.PackerBuildName)
@@ -211,13 +201,8 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 		}
 	*/
 
-	if c.SSHUser == "" {
+	if c.Comm.SSHUsername == "" {
 		errs = append(errs, errors.New("An ssh_username must be specified."))
-	}
-
-	c.SSHWaitTimeout, err = time.ParseDuration(c.RawSSHWaitTimeout)
-	if err != nil {
-		errs = append(errs, fmt.Errorf("Failed to parse ssh_wait_timeout: %s", err))
 	}
 
 	switch c.Format {
