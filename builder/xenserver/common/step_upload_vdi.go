@@ -16,6 +16,7 @@ type StepUploadVdi struct {
 	VdiNameFunc   func() string
 	ImagePathFunc func() string
 	VdiUuidKey    string
+	PreserveVdi   bool
 }
 
 func (self *StepUploadVdi) uploadVdi(ctx context.Context, state multistep.StateBag) multistep.StepAction {
@@ -105,7 +106,7 @@ func (self *StepUploadVdi) Cleanup(state multistep.StateBag) {
 
 	vdiName := self.VdiNameFunc()
 
-	if config.ShouldKeepVM(state) {
+	if config.ShouldKeepVM(state) || self.PreserveVdi {
 		return
 	}
 

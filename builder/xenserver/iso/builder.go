@@ -254,6 +254,9 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 		&xscommon.StepFindOrUploadVdi{
 			xscommon.StepUploadVdi{
 				VdiNameFunc: func() string {
+					if self.config.ISOName != "" {
+						return self.config.ISOName
+					}
 					if len(self.config.ISOUrls) > 0 {
 						return path.Base(self.config.ISOUrls[0])
 					}
@@ -265,7 +268,8 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 					}
 					return ""
 				},
-				VdiUuidKey: "iso_vdi_uuid",
+				VdiUuidKey:  "iso_vdi_uuid",
+				PreserveVdi: self.config.ISOName != "",
 			},
 		},
 		&xscommon.StepFindVdi{
