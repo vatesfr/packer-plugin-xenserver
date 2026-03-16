@@ -90,9 +90,11 @@ func (self *StepCleanUpTemplate) Run(ctx context.Context, state multistep.StateB
 		if self.Force {
 			ui.Message(fmt.Sprintf("Deleting %d templates since -force was specified!", len(templates)))
 			for _, template := range templates {
-				c.client.VM.Destroy(c.session, template)
+				if err := c.client.VM.Destroy(c.session, template); err != nil {
+					ui.Error(fmt.Sprintf("Failed to destroy template '%s': %v", template, err))
+					return multistep.ActionHalt
+				}
 			}
-			return multistep.ActionContinue
 		} else {
 			ui.Message(fmt.Sprintf("Ignoring %d templates since -force was NOT specified!", len(templates)))
 			return multistep.ActionContinue
