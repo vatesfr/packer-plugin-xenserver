@@ -276,7 +276,9 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			VdiName:    self.config.ISOName,
 			VdiUuidKey: "isoname_vdi_uuid",
 		},
-		new(xscommon.StepGetVmTemplate),
+		&xscommon.StepGetVmTemplate{
+			SkipStep: self.config.SkipSetTemplate,
+		},
 		&xscommon.StepCreateInstance{
 			AssumePreInstalledOS: false,
 		},

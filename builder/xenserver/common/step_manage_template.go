@@ -18,9 +18,15 @@ import (
 //
 // Output:
 //   - If templates are found, stores them in the StateBag under the key "existing_templates"
-type StepGetVmTemplate struct{}
+type StepGetVmTemplate struct {
+	SkipStep bool
+}
 
-func (StepGetVmTemplate) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+func (self *StepGetVmTemplate) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
+	if self.SkipStep {
+		return multistep.ActionContinue
+	}
+
 	ui := state.Get("ui").(packer.Ui)
 	c := state.Get("client").(*Connection)
 	config := state.Get("config").(Config)
@@ -60,7 +66,7 @@ func (StepGetVmTemplate) Run(ctx context.Context, state multistep.StateBag) mult
 	return multistep.ActionContinue
 }
 
-func (StepGetVmTemplate) Cleanup(state multistep.StateBag) {}
+func (self *StepGetVmTemplate) Cleanup(state multistep.StateBag) {}
 
 // Removes old templates with the same name as the current build.
 //
@@ -103,6 +109,7 @@ func (self *StepCleanUpTemplate) Run(ctx context.Context, state multistep.StateB
 		ui.Message("No existing templates to clean up.")
 		return multistep.ActionContinue
 	}
+	return multistep.ActionContinue
 }
 
 func (self *StepCleanUpTemplate) Cleanup(state multistep.StateBag) {}
