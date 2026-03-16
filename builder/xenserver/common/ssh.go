@@ -45,7 +45,7 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 	return func(state multistep.StateBag) (*gossh.ClientConfig, error) {
 		config := state.Get("commonconfig").(CommonConfig)
 		auth := []gossh.AuthMethod{
-			gossh.Password(config.SSHPassword),
+			gossh.Password(config.Comm.SSHPassword),
 		}
 
 		if config.SSHKeyPath != "" {
@@ -58,7 +58,7 @@ func SSHConfigFunc(config SSHConfig) func(multistep.StateBag) (*gossh.ClientConf
 		}
 
 		return &gossh.ClientConfig{
-			User:            config.SSHUser,
+			User:            config.Comm.SSHUsername,
 			Auth:            auth,
 			HostKeyCallback: gossh.InsecureIgnoreHostKey(),
 		}, nil
