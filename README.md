@@ -57,7 +57,7 @@ source "xenserver-iso" "ubuntu-2404" {
 ### Dependencies
 * Packer >= v1.7.1 (https://packer.io)
 * XCP-ng > 8.2.1
-* Golang 1.24
+* Golang 1.26
 
 ## Compile the plugin
 
