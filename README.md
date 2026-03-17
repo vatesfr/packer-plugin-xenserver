@@ -56,8 +56,8 @@ source "xenserver-iso" "ubuntu-2404" {
 
 ### Dependencies
 * Packer >= v1.7.1 (https://packer.io)
-* XCP-ng / Citrix Hypervisor > 7.6
-* Golang 1.20
+* XCP-ng > 8.2.1
+* Golang 1.26
 
 ## Compile the plugin
 
@@ -69,6 +69,7 @@ Documentation for Plugins directory: [Official Docs](https://developer.hashicorp
 To compile the plugin, you can use this commands:
 
 ```
+make install-packer-sdc
 make build
 make dev
 ```
@@ -79,6 +80,12 @@ Successfully installed plugin github.com/vatesfr/xenserver from <path>/packer-pl
 ```
 
 Then you can use your build file like usual.
+
+To enable Packer logs: 
+
+```sh
+export PACKER_LOG=1
+```
 
 # Documentation
 
