@@ -48,6 +48,9 @@ builds:
         goarch: amd64
       - goos: windows
         goarch: arm
+      - goos: freebsd
+        goarch: arm
+        goarm: 6
     binary: '{{ .ProjectName }}_v{{ .Version }}_{{ .Env.API_VERSION }}_{{ .Os }}_{{ .Arch }}'
 archives:
 - formats: [ 'zip' ]  
