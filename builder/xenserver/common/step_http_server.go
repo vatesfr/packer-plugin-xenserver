@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/packer-plugin-sdk/multistep"
+	"github.com/hashicorp/packer-plugin-sdk/multistep/commonsteps"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
 )
 
@@ -48,12 +49,20 @@ func (snooper IPSnooper) ServeHTTP(resp http.ResponseWriter, req *http.Request) 
 	snooper.handler.ServeHTTP(resp, req)
 }
 
+func (s *StepHTTPServer) Handler(config *CommonConfig) http.Handler {
+	if config.HTTPDir != "" {
+		return http.FileServer(http.Dir(config.HTTPDir))
+	}
+
+	return commonsteps.MapServer(config.HTTPContent)
+}
+
 func (s *StepHTTPServer) Run(ctx context.Context, state multistep.StateBag) multistep.StepAction {
 	config := state.Get("commonconfig").(CommonConfig)
 	ui := state.Get("ui").(packer.Ui)
 
 	var httpPort uint = 0
-	if config.HTTPDir == "" {
+	if config.HTTPDir == "" && len(config.HTTPContent) == 0 {
 		// the packer provision steps assert this type is an int
 		// so this cannot be a uint like the rest of the code
 		state.Put("http_port", int(httpPort))
@@ -70,12 +79,11 @@ func (s *StepHTTPServer) Run(ctx context.Context, state multistep.StateBag) mult
 	ui.Say(fmt.Sprintf("Starting HTTP server on port %d", httpPort))
 
 	// Start the HTTP server and run it in the background
-	fileServer := http.FileServer(http.Dir(config.HTTPDir))
 	server := &http.Server{
 		Addr: fmt.Sprintf(":%d", httpPort),
 		Handler: IPSnooper{
 			ch:      s.Chan,
-			handler: fileServer,
+			handler: s.Handler(&config),
 		},
 	}
 	go server.Serve(s.l)
