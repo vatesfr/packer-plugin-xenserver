@@ -3,6 +3,8 @@ package xva
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
@@ -44,6 +46,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 	errs = packer.MultiErrorAppend(errs, self.config.SSHConfig.Prepare(self.config.GetInterpContext())...)
 
 	// Set default values
+	if self.config.RawInstallTimeout == "" {
+		self.config.RawInstallTimeout = "200m"
+	}
+
 	if self.config.VCPUsMax == 0 {
 		self.config.VCPUsMax = 1
 	}
@@ -62,6 +68,10 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 	// Validation
 
+	self.config.InstallTimeout, err = time.ParseDuration(self.config.RawInstallTimeout)
+	if err != nil {
+		errs = packer.MultiErrorAppend(errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
+	}
 	if self.config.SourcePath == "" && self.config.CloneTemplate == "" {
 		errs = packer.MultiErrorAppend(
 			errs, errors.New("Either source_path or clone_template must be specified"))
