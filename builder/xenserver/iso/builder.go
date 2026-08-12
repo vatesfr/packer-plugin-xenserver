@@ -284,10 +284,6 @@ func (self *Builder) Run(ctx context.Context, ui packer.Ui, hook packer.Hook) (p
 			VdiType:    xsclient.VbdTypeCD,
 		},
 		&xscommon.StepAttachVdi{
-			VdiUuidKey: "isoname_vdi_uuid",
-			VdiType:    xsclient.VbdTypeCD,
-		},
-		&xscommon.StepAttachVdi{
 			VdiUuidKey: "tools_vdi_uuid",
 			VdiType:    xsclient.VbdTypeCD,
 		},
