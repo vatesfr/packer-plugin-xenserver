@@ -177,7 +177,7 @@ If you want to add multiple disk, you can do it like this:
   always deletes the VM regardless of whether the process succeeded and an artifact
   was produced. `always` asks Packer to leave the VM at the end of the process
   regardless of success. `on_success` requests that the VM only be cleaned up if an
-  artifact was produced. The latter is useful for debugging templates that fail.
+  artifact was produced. `always` is useful for debugging templates that fail.
 
 * `ip_getter` (string) - Defines the method by which the IP of the guest machine is
   identified. Options are: `auto`, `tools`, `http`. The default is `auto`, which will
