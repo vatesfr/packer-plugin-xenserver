@@ -202,6 +202,21 @@ func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 
 	} else {
 		log.Printf("Using provided network names: %v\n", config.NetworkNames)
+
+		// A cloned template may already have VIFs (often on a network without
+		// DHCP). Remove them so the requested networks are attached cleanly at
+		// device 0..n instead of failing with DEVICE_ALREADY_EXISTS.
+		existingVIFs, err := c.GetClient().VM.GetVIFs(c.GetSessionRef(), instance)
+		if err != nil {
+			ui.Error(fmt.Sprintf("Error getting existing VIFs: %s", err.Error()))
+			return multistep.ActionHalt
+		}
+		for _, vif := range existingVIFs {
+			if err := c.GetClient().VIF.Destroy(c.GetSessionRef(), vif); err != nil {
+				ui.Say(fmt.Sprintf("Failed to remove existing VIF: %v", err))
+			}
+		}
+
 		// Look up each network by it's name label
 		for i, networkNameLabel := range config.NetworkNames {
 			networks, err := c.GetClient().Network.GetByNameLabel(c.GetSessionRef(), networkNameLabel)
