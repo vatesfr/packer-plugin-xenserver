@@ -3,6 +3,8 @@ package xva
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
@@ -60,7 +62,18 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 		self.config.VMMemory = 1024
 	}
 
+	if self.config.RawInstallTimeout == "" {
+		self.config.RawInstallTimeout = "200m"
+	}
+
 	// Validation
+
+	// StepWaitForIP waits for the IP address of the VM until this timeout.
+	self.config.InstallTimeout, err = time.ParseDuration(self.config.RawInstallTimeout)
+	if err != nil {
+		errs = packer.MultiErrorAppend(
+			errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
+	}
 
 	if self.config.SourcePath == "" && self.config.CloneTemplate == "" {
 		errs = packer.MultiErrorAppend(
