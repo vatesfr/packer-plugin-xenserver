@@ -35,7 +35,22 @@ func (self *StepStartVmPaused) Run(ctx context.Context, state multistep.StateBag
 		return multistep.ActionHalt
 	}
 
-	err = c.client.VM.SetHVMBootParams(c.session, instance, map[string]string{"order": "cd", "firmware": config.Firmware})
+	// Keep the other boot params of the VM, its firmware included unless
+	// one is configured: the xva builder has no default, a cloned template
+	// or an imported XVA already has one.
+	bootParams, err := c.client.VM.GetHVMBootParams(c.session, instance)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Unable to get HVM boot params: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+	if bootParams == nil {
+		bootParams = map[string]string{}
+	}
+	bootParams["order"] = "cd"
+	if config.Firmware != "" {
+		bootParams["firmware"] = config.Firmware
+	}
+	err = c.client.VM.SetHVMBootParams(c.session, instance, bootParams)
 	if err != nil {
 		ui.Error(fmt.Sprintf("Unable to set HVM boot params: %s", err.Error()))
 		return multistep.ActionHalt
