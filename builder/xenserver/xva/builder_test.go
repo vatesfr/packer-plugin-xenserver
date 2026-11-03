@@ -2,6 +2,7 @@ package xva
 
 import (
 	"testing"
+	"time"
 
 	"github.com/hashicorp/packer-plugin-sdk/common"
 	"github.com/hashicorp/packer-plugin-sdk/packer"
@@ -58,6 +59,39 @@ func TestBuilderPrepare_Defaults(t *testing.T) {
 
 	if b.config.HostSshPort != 22 {
 		t.Errorf("bad ssh port: %d", b.config.HostSshPort)
+	}
+
+	if b.config.InstallTimeout != 200*time.Minute {
+		t.Errorf("bad install timeout: %s", b.config.InstallTimeout)
+	}
+}
+
+func TestBuilderPrepare_InstallTimeout(t *testing.T) {
+	var b Builder
+	config := testConfig()
+
+	// Bad
+	config["install_timeout"] = "foo"
+	_, warns, err := b.Prepare(config)
+	if len(warns) > 0 {
+		t.Fatalf("bad: %#v", warns)
+	}
+	if err == nil {
+		t.Fatal("should have error")
+	}
+
+	// Good
+	config["install_timeout"] = "10m"
+	b = Builder{}
+	_, warns, err = b.Prepare(config)
+	if len(warns) > 0 {
+		t.Fatalf("bad: %#v", warns)
+	}
+	if err != nil {
+		t.Fatalf("should not have error: %s", err)
+	}
+	if b.config.InstallTimeout != 10*time.Minute {
+		t.Errorf("bad install timeout: %s", b.config.InstallTimeout)
 	}
 }
 
