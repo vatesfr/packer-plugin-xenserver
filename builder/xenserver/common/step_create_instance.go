@@ -163,7 +163,26 @@ func (self *StepCreateInstance) Run(ctx context.Context, state multistep.StateBa
 
 	var network xsclient.NetworkRef
 
-	if len(config.NetworkNames) == 0 {
+	// A cloned template may already have VIFs: keep them when no network
+	// is configured, otherwise replace them (their devices would clash).
+	vifs, err := c.GetClient().VM.GetVIFs(c.GetSessionRef(), instance)
+	if err != nil {
+		ui.Error(fmt.Sprintf("Error getting the VIFs of the VM: %s", err.Error()))
+		return multistep.ActionHalt
+	}
+	if len(config.NetworkNames) > 0 {
+		for _, vif := range vifs {
+			log.Printf("Destroying VIF '%s' of the template\n", vif)
+			if err := c.GetClient().VIF.Destroy(c.GetSessionRef(), vif); err != nil {
+				ui.Error(fmt.Sprintf("Error destroying a VIF of the template: %s", err.Error()))
+				return multistep.ActionHalt
+			}
+		}
+	}
+
+	if len(config.NetworkNames) == 0 && len(vifs) > 0 {
+		log.Printf("No network name given, keeping the %d VIF(s) of the template\n", len(vifs))
+	} else if len(config.NetworkNames) == 0 {
 		// No network has be specified. Use the management interface
 		log.Println("No network name given, attempting to use management interface")
 		pifs, err := c.GetClient().PIF.GetAll(c.GetSessionRef())

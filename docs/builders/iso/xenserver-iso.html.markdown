@@ -190,6 +190,8 @@ If you want to add multiple disk, you can do it like this:
 * `network_names` (array of strings) - A list of networks identified by their name label which
   will be used for the VM during creation. The first network will correspond to the VM's
   first network interface (VIF), the second will correspond to the second VIF and so on.
+  They replace the VIFs of `clone_template`. Without `network_names`, the VM keeps the
+  VIFs of the template, or gets one on the management network if the template has none.
 
 * `export_network_names` (array of strings) - A list of networks identified by their name label which
   will be attached to the export. The first network will correspond to the VM's
