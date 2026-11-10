@@ -2,7 +2,7 @@
 
 In order for new users to get up and running with the packer builder, a few examples of building a machine image with popular distros have been created.
 
-In order to see an exhaustive list of configuration options for the packer builder please see the [following documentation](../docs/builders/xenserver-iso.html.markdown). This doc will focus on the details relevant to the particular distro.
+In order to see an exhaustive list of configuration options for the packer builder please see the [following documentation](../docs/builders/iso/xenserver-iso.html.markdown). This doc will focus on the details relevant to the particular distro.
 
 ### Running the examples
 
