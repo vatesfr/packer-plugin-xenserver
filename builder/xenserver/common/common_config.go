@@ -51,9 +51,10 @@ type CommonConfig struct {
 
 	ToolsIsoName string `mapstructure:"tools_iso_name"`
 
-	HTTPDir     string `mapstructure:"http_directory"`
-	HTTPPortMin uint   `mapstructure:"http_port_min"`
-	HTTPPortMax uint   `mapstructure:"http_port_max"`
+	HTTPContent map[string]string `mapstructure:"http_content"`
+	HTTPDir     string            `mapstructure:"http_directory"`
+	HTTPPortMin uint              `mapstructure:"http_port_min"`
+	HTTPPortMax uint              `mapstructure:"http_port_max"`
 
 	//	SSHHostPortMin    uint   `mapstructure:"ssh_host_port_min"`
 	//	SSHHostPortMax    uint   `mapstructure:"ssh_host_port_max"`
@@ -132,7 +133,6 @@ func (c *CommonConfig) Prepare(ctx *interpolate.Context, pc *common.PackerConfig
 	if c.Comm.SSHPort == 0 {
 		c.Comm.SSHPort = 22
 	}
-
 
 	if c.OutputDir == "" {
 		c.OutputDir = fmt.Sprintf("output-%s", pc.PackerBuildName)

@@ -142,6 +142,21 @@ If you want to add multiple disk, you can do it like this:
   "vdi_raw" to export just the raw disk image. Set to "none" to export nothing;
   this is only useful with "keep_vm" set to "always" or "on_success".
 
+- `http_content` (map[string]string) - Key/Values to serve using an HTTP server.
+  `http_content` works like and conflicts with `http_directory`. The keys
+  represent the paths and the values contents, the keys must start with a slash,
+  ex: `/path/to/file`. `http_content` is useful for hosting kickstart files and
+  so on. By default this is empty, which means no HTTP server will be started.
+  The address and port of the HTTP server will be available as variables in
+  `boot_command`. This is covered in more detail below.
+  Example:
+  ```hcl
+    http_content = {
+      "/a/b"     = file("http/b")
+      "/foo/bar" = templatefile("${path.root}/preseed.cfg", { packages = ["nginx"] })
+    }
+  ```
+
 * `http_directory` (string) - Path to a directory to serve using an HTTP
   server. The files in this directory will be available over HTTP which will
   be requestable from the virtual machine. This is useful for hosting
