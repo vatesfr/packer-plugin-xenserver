@@ -3,6 +3,8 @@ package xva
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/hashicorp/packer-plugin-sdk/communicator"
@@ -58,6 +60,22 @@ func (self *Builder) Prepare(raws ...interface{}) (params []string, warns []stri
 
 	if self.config.VMMemory == 0 {
 		self.config.VMMemory = 1024
+	}
+
+	// The xva builder needs the same defaults as iso: without this,
+	// InstallTimeout stays 0 and StepWaitForIP times out immediately, and an
+	// empty firmware makes XAPI reject SetHVMBootParams.
+	if self.config.RawInstallTimeout == "" {
+		self.config.RawInstallTimeout = "30m"
+	}
+	self.config.InstallTimeout, err = time.ParseDuration(self.config.RawInstallTimeout)
+	if err != nil {
+		errs = packer.MultiErrorAppend(
+			errs, fmt.Errorf("Failed to parse install_timeout: %s", err))
+	}
+
+	if self.config.Firmware == "" {
+		self.config.Firmware = "bios"
 	}
 
 	// Validation
